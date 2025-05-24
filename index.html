@@ -6,6 +6,7 @@
     <title>Modern Echo Findings Report - PDF Export & Save</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -114,24 +115,28 @@
             color: #e1e1e1;
         }
 
+        /* Print CSS might still be useful for the structure if html2pdf needs specific rendering hints,
+           or if a direct print (Ctrl+P) is attempted by the user, though we're overriding the button. */
         @media print {
             body { background-color: white !important; }
             body * { visibility: hidden; background-color: white !important; }
             
             #printableReport {
-                display: block !important; /* Ensure #printableReport itself is displayed */
-                visibility: visible !important; /* Ensure visibility */
-                position: absolute;
+                display: block !important; 
+                visibility: visible !important; 
+                position: absolute; /* Or relative if html2pdf handles it better */
                 left: 0;
                 top: 0;
-                width: 100%;
+                width: 100%; /* Ensure it takes width for html2pdf capture */
                 padding: 20px; 
                 font-size: 11pt; 
                 line-height: 1.4;
+                background-color: white !important; /* Ensure background for PDF */
             }
-            #printableReport * { /* Styles for content WITHIN #printableReport */
+            #printableReport * { 
                 visibility: visible !important; 
                 color: black !important; 
+                background-color: transparent !important; /* Avoid capturing dark backgrounds from theme */
             }
             #printableReport h1 { font-size: 18pt; text-align: center; margin-bottom: 20px; }
             #printableReport h2 { font-size: 14pt; border-bottom: 1px solid #888; padding-bottom: 5px; margin-top: 20px; margin-bottom: 10px; }
@@ -917,7 +922,7 @@
             </button>
         </div>
 
-        <div id="printableReport" style="display: none;"></div>
+        <div id="printableReport" style="display: none; background-color: white;"></div>
 
         <div id="messageModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center no-print" style="display: none;">
             <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md mx-auto">
@@ -938,10 +943,8 @@
         import { getFirestore, collection, addDoc, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase instance variables
-        let db, auth, userId, firebaseAppInstance; // Renamed 'app' to 'firebaseAppInstance' to avoid conflict
-        
-        // These __app_id and __firebase_config variables are expected to be injected by the environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'echo-report-app-default'; // Default app ID if not provided
+        let db, auth, userId, firebaseAppInstance; 
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'echo-report-app-default'; 
         const firebaseConfigString = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
         let firebaseConfig = null;
 
@@ -956,15 +959,11 @@
             console.warn("Firebase config (__firebase_config) is not available. Saving will not work.");
         }
 
-        // --- DOMContentLoaded: Initialize summaries, date, Firebase, and button listeners ---
         document.addEventListener('DOMContentLoaded', async function() {
             updateAllSummaries();
-
             const today = new Date().toISOString().split('T')[0];
             const reportDateEl = document.getElementById('report_date');
-            if (reportDateEl) {
-                reportDateEl.value = today;
-            }
+            if (reportDateEl) reportDateEl.value = today;
 
             if (firebaseConfig) {
                 try {
@@ -972,7 +971,6 @@
                     auth = getAuth(firebaseAppInstance);
                     db = getFirestore(firebaseAppInstance);
                     setLogLevel('debug'); 
-
                     onAuthStateChanged(auth, async (user) => {
                         if (user) {
                             userId = user.uid;
@@ -980,26 +978,18 @@
                         } else {
                             console.log("User not authenticated. Attempting sign-in...");
                             const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                            if (initialAuthToken) {
-                                try {
-                                    await signInWithCustomToken(auth, initialAuthToken);
-                                    console.log("Signed in with custom token.");
-                                } catch (error) {
-                                    console.error("Error signing in with custom token, trying anonymous:", error);
-                                    try {
-                                        await signInAnonymously(auth);
+                            try {
+                                if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
+                                else await signInAnonymously(auth);
+                                console.log(initialAuthToken ? "Signed in with custom token." : "Signed in anonymously.");
+                            } catch (error) {
+                                console.error("Sign-in error:", error);
+                                if (initialAuthToken) { // If custom token failed, try anonymous as fallback
+                                    try { 
+                                        await signInAnonymously(auth); 
                                         console.log("Signed in anonymously after custom token failure.");
-                                    } catch (anonError) {
-                                        console.error("Error signing in anonymously:", anonError);
-                                        displayModalMessage("Authentication failed. Saving reports may not work.", "Auth Error");
-                                    }
-                                }
-                            } else {
-                                try {
-                                    await signInAnonymously(auth);
-                                    console.log("Signed in anonymously.");
-                                } catch (anonError) {
-                                    console.error("Error signing in anonymously:", anonError);
+                                    } catch (anonError) {displayModalMessage("Authentication failed. Saving reports may not work.", "Auth Error");}
+                                } else {
                                     displayModalMessage("Authentication failed. Saving reports may not work.", "Auth Error");
                                 }
                             }
@@ -1014,17 +1004,13 @@
             }
 
             const pdfButton = document.getElementById('generatePdfButton');
-            if (pdfButton) {
-                pdfButton.addEventListener('click', handleSaveAndPrint);
-            }
+            if (pdfButton) pdfButton.addEventListener('click', handleSaveAndGeneratePdf); // Changed function name
             
             const modalCloseButton = document.getElementById('modalCloseButton');
-            if(modalCloseButton) {
-                modalCloseButton.addEventListener('click', () => {
-                    const modal = document.getElementById('messageModal');
-                    if(modal) modal.style.display = 'none';
-                });
-            }
+            if(modalCloseButton) modalCloseButton.addEventListener('click', () => {
+                const modal = document.getElementById('messageModal');
+                if(modal) modal.style.display = 'none';
+            });
         });
 
         function getSelectedText(elementId) {
@@ -1247,14 +1233,11 @@
                 reportDate: document.getElementById('report_date')?.value || '',
                 sections: {} 
             };
-
             const sectionDivs = document.querySelectorAll('.main-anatomical-section');
             sectionDivs.forEach((sectionDiv, index) => {
                 if (index === 0) return; 
-
                 const sectionId = sectionDiv.id.replace('Section', ''); 
                 data.sections[sectionId] = {};
-                
                 const selects = sectionDiv.querySelectorAll('select');
                 selects.forEach(select => {
                     const selectId = select.id; 
@@ -1278,7 +1261,6 @@
                 displayModalMessage("Error: Firebase is not configured. Cannot save report.", "Configuration Error");
                 return null;
             }
-
             try {
                 const reportCollectionPath = `artifacts/${appId}/users/${userId}/echo_reports`;
                 const docRef = await addDoc(collection(db, reportCollectionPath), {
@@ -1300,7 +1282,6 @@
             const modal = document.getElementById('messageModal');
             const modalTitleEl = document.getElementById('modalTitle');
             const modalMessageEl = document.getElementById('modalMessage');
-
             if (modal && modalTitleEl && modalMessageEl) {
                 modalTitleEl.textContent = title;
                 modalMessageEl.textContent = message;
@@ -1310,9 +1291,9 @@
             }
         }
 
-        async function handleSaveAndPrint() {
-            const printableDiv = document.getElementById('printableReport');
-            if (!printableDiv) {
+        async function handleSaveAndGeneratePdf() { // Renamed from handleSaveAndPrint
+            const printableElement = document.getElementById('printableReport'); // Use 'printableElement' for clarity
+            if (!printableElement) {
                 console.error("Printable report area not found.");
                 return;
             }
@@ -1321,12 +1302,10 @@
 
             if (firebaseConfig && db && userId) { 
                 const savedReportId = await saveReportData(formDataToSave);
-                if (!savedReportId) {
-                    console.warn("Report saving failed, but proceeding with PDF generation.");
-                }
+                // Continue with PDF generation even if saving fails, user has been notified.
             } else {
                 console.warn("Firebase not configured or user not authenticated. Skipping save, proceeding with PDF generation only.");
-                displayModalMessage("Warning: Report will be generated for print/PDF, but not saved to database due to configuration/login issue.", "Save Skipped");
+                displayModalMessage("Warning: Report will be generated as PDF, but not saved to database due to configuration/login issue.", "Save Skipped");
             }
             
             let reportHTML = `<h1>Echocardiography Findings Report</h1>`;
@@ -1342,7 +1321,6 @@
                     <p><strong>Date:</strong> ${reportDate}</p>
                 </div>
             `;
-            
             const sectionsMeta = [ 
                 { id: 'leftVentricleSummary', title: 'Left Ventricle' },
                 { id: 'rightVentricleSummary', title: 'Right Ventricle' },
@@ -1355,7 +1333,6 @@
                 { id: 'aortaSummary', title: 'Aorta' },
                 { id: 'ivcSvcPeriSummary', title: 'IVC / SVC / Pericardium' }
             ];
-
             sectionsMeta.forEach(section => {
                 const summaryDiv = document.getElementById(section.id);
                 let summaryContent = "<em>No findings recorded for this section.</em>"; 
@@ -1366,18 +1343,34 @@
                 reportHTML += `<div>${summaryContent}</div>`;
             });
 
-            printableDiv.innerHTML = reportHTML;
-            printableDiv.style.display = 'block'; 
+            printableElement.innerHTML = reportHTML;
+            printableElement.style.display = 'block'; 
+            // Ensure printableElement has a white background for PDF generation if body is dark
+            printableElement.style.backgroundColor = 'white'; 
 
-            function cleanUpAfterPrint() {
-                printableDiv.style.display = 'none';
-                printableDiv.innerHTML = ''; 
-                window.removeEventListener('afterprint', cleanUpAfterPrint); // Remove the listener itself
-                console.log("Cleaned up after print.");
-            }
-            window.addEventListener('afterprint', cleanUpAfterPrint);
-            
-            window.print();
+            const pdfOptions = {
+                margin: 10, // mm
+                filename: 'echo-report.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: true, backgroundColor: '#ffffff' }, // Added backgroundColor here too
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().from(printableElement).set(pdfOptions).save()
+                .then(() => {
+                    console.log("PDF generated and download initiated.");
+                    printableElement.style.display = 'none'; 
+                    printableElement.innerHTML = ''; 
+                    printableElement.style.backgroundColor = ''; // Reset background
+                })
+                .catch(err => {
+                    console.error("Error generating PDF with html2pdf:", err);
+                    displayModalMessage("Error generating PDF. Please try again.", "PDF Error");
+                    // Still hide the element even if PDF generation fails
+                    printableElement.style.display = 'none'; 
+                    printableElement.innerHTML = '';
+                    printableElement.style.backgroundColor = ''; 
+                });
         }
     </script>
 </body>
