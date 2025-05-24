@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Echo Findings Report - PDF Export & Save</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a1c; /* Very dark grey/near black */
+            color: #e1e1e1; /* Light grey text */
+        }
+        .main-anatomical-section {
+            background-color: #2c2c2e; /* Dark grey */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #444448; /* Mid grey border for sections */
+        }
+        .main-anatomical-section h3.details-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #4d88ff; /* Brighter Royal Navy Blue */
+            margin-bottom: 15px;
+            border-bottom: 2px solid #003366; /* Darker Royal Navy Blue for border */
+            padding-bottom: 8px;
+        }
+        .summary-header {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #4d88ff; /* Brighter Royal Navy Blue */
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #444448; /* Mid grey border */
+        }
+        label {
+            font-weight: 500;
+            color: #b0b0b0; /* Lighter grey for labels */
+            display: block;
+            margin-top: 12px;
+            margin-bottom: 4px;
+        }
+        select, input[type="text"], input[type="date"], textarea {
+            border-width: 1px;
+            border-style: solid;
+            border-color: #555558; /* Grey border for inputs */
+            border-radius: 6px;
+            padding: 8px 12px;
+            width: 100%;
+            background-color: #3a3a3c; /* Darker grey for input backgrounds */
+            color: #e1e1e1; /* Light text in inputs */
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.8); 
+        }
+        select:focus, input[type="text"]:focus, input[type="date"]:focus, textarea:focus {
+            border-color: #4d88ff; 
+            box-shadow: 0 0 0 3px rgba(77, 136, 255, 0.3); 
+            outline: none;
+        }
+        .summary-box {
+            background-color: #222b38; 
+            border: 1px solid #4d88ff; 
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 8px;
+            min-height: 80px;
+            white-space: pre-wrap;
+            font-size: 0.9rem;
+            color: #c0c8d4; 
+            flex-grow: 1;
+        }
+        .main-header {
+            background-color: #003366; 
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 2rem;
+            border: 1px solid #4d88ff;
+        }
+        .main-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 1rem;
+        }
+        .page-container {
+            max-width: 1280px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 1rem;
+        }
+        @media (min-width: 768px) {
+            .page-container {
+                padding: 2rem;
+            }
+        }
+        select optgroup {
+            font-weight: bold;
+            background-color: #3a3a3c; 
+            color: #6fa4ff; 
+        }
+        select option {
+            background-color: #3a3a3c;
+            color: #e1e1e1;
+        }
+
+        @media print {
+            body { background-color: white !important; }
+            body * { visibility: hidden; background-color: white !important; }
+            #printableReport, #printableReport * { visibility: visible; color: black !important; }
+            #printableReport { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; font-size: 11pt; line-height: 1.4; }
+            #printableReport h1 { font-size: 18pt; color: black !important; text-align: center; margin-bottom: 20px; }
+            #printableReport h2 { font-size: 14pt; color: black !important; border-bottom: 1px solid #888; padding-bottom: 5px; margin-top: 20px; margin-bottom: 10px; }
+            #printableReport h3 { font-size: 12pt; color: black !important; margin-top: 10px; margin-bottom: 5px; font-style: italic; }
+            #printableReport p, #printableReport div:not(#printableReport) { color: black !important; margin-bottom: 8px; font-size: 11pt; }
+            #printableReport hr { border: none; border-top: 1px solid #ccc; margin: 20px 0; }
+            .no-print, .no-print * { display: none !important; }
+        }
+        .download-button-container {
+            background-color: #2c2c2e; 
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 1.5rem; 
+            border: 1px solid #444448;
+        }
+        /* Modal Styles */
+        #messageModal {
+            z-index: 1000; /* Ensure modal is on top */
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="page-container">
+        <header class="main-header no-print"> <h1>Comprehensive Echocardiography Findings Report</h1>
+        </header>
+
+        <div class="main-anatomical-section no-print"> <h3 class="details-header">Student & Study Information</h3>
+            <div class="input-grid">
+                <div>
+                    <label for="student_name">Student Name:</label>
+                    <input type="text" id="student_name" name="student_name">
+                </div>
+                <div>
+                    <label for="study_id_info">Mock Study ID/Name:</label>
+                    <input type="text" id="study_id_info" name="study_id_info">
+                </div>
+                 <div>
+                    <label for="report_date">Date:</label>
+                    <input type="date" id="report_date" name="report_date">
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-6 no-print">
+            <div id="leftVentricleSection" class="main-anatomical-section">
+                <h3 class="details-header">Left Ventricle</h3>
+                <div class="input-grid">
+                    <div>
+                        <label for="lv_size_shape">Size & Shape:</label>
+                        <select id="lv_size_shape" onchange="updateLeftVentricleSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal size and geometry">Normal size and geometry</option>
+                            <option value="Mildly dilated">Mildly dilated</option>
+                            <option value="Moderately dilated">Moderately dilated</option>
+                            <option value="Severely dilated">Severely dilated</option>
+                            <option value="Apical aneurysm">Apical aneurysm</option>
+                            <option value="Basal aneurysm">Basal aneurysm</option>
+                            <option value="Mid-ventricular aneurysm">Mid-ventricular aneurysm</option>
+                            <option value="Pseudoaneurysm">Pseudoaneurysm</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="lv_wall_thickness">Wall Thickness:</label>
+                        <select id="lv_wall_thickness" onchange="updateLeftVentricleSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal wall thickness">Normal wall thickness</option>
+                            <optgroup label="Hypertrophy">
+                                <option value="Mild concentric LVH">Mild concentric LVH</option>
+                                <option value="Moderate concentric LVH">Moderate concentric LVH</option>
+                                <option value="Severe concentric LVH">Severe concentric LVH</option>
+                                <option value="Asymmetric septal hypertrophy (ASH)">Asymmetric septal hypertrophy (ASH)</option>
+                                <option value="Apical hypertrophy">Apical hypertrophy</option>
+                                <option value="Eccentric LVH">Eccentric LVH</option>
+                            </optgroup>
+                            <option value="Thinned walls">Thinned walls (e.g., post-MI)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="lv_systolic_function_global">Global Systolic Function (EF%):</label>
+                        <select id="lv_systolic_function_global" onchange="updateLeftVentricleSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal (EF >50-55%)">Normal (EF >50-55%)</option>
+                            <option value="Hyperdynamic (EF >70-75%)">Hyperdynamic (EF >70-75%)</option>
+                            <option value="Mildly reduced (EF 40-49%)">Mildly reduced (EF 40-49%)</option>
+                            <option value="Moderately reduced (EF 30-39%)">Moderately reduced (EF 30-39%)</option>
+                            <option value="Severely reduced (EF <30%)">Severely reduced (EF <30%)</option>
+                            <option value="Unable to assess EF">Unable to assess EF</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="lv_ef_method">EF Calculation Method:</label>
+                        <select id="lv_ef_method" onchange="updateLeftVentricleSummary()">
+                            <option value="" selected></option>
+                            <option value="Biplane (Simpson's)">Biplane (Simpson's)</option>
+                            <option value="3D Volume">3D Volume</option>
+                            <option value="Visual estimation">Visual estimation</option>
+                            <option value="Contrast-enhanced">Contrast-enhanced</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="lv_rwma">Regional Wall Motion Abnormalities:</label>
+                        <select id="lv_rwma" onchange="updateLeftVentricleSummary()">
+                            <option value="" selected></option>
+                            <option value="No RWMAs">No RWMAs</option>
+                            <option value="RWMAs present (specify below)">RWMAs present (specify below)</option>
+                            <option value="Global hypokinesis">Global hypokinesis</option>
+                            <option value="Cannot exclude RWMAs">Cannot exclude RWMAs (technically limited)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="lv_rwma_location">RWMA Location (if present):</label>
+                        <select id="lv_rwma_location" multiple onchange="updateLeftVentricleSummary()" class="h-32">
+                            <optgroup label="LAD Territory">
+                                <option value="Anterior RWMA">Anterior</option>
+                                <option value="Anteroseptal RWMA">Anteroseptal</option>
+                                <option value="Apical RWMA">Apical (anterior/septal/cap)</option>
+                            </optgroup>
+                            <optgroup label="LCx Territory">
+                                <option value="Anterolateral RWMA">Anterolateral</option>
+                                <option value="Inferolateral RWMA">Inferolateral (Posterolateral)</option>
+                                <option value="Lateral RWMA">Lateral</option>
+                            </optgroup>
+                            <optgroup label="RCA Territory">
+                                <option value="Inferior RWMA">Inferior</option>
+                                <option value="Inferoseptal RWMA">Inferoseptal</option>
+                                <option value="RV free wall (RCA/LCx)">RV free wall (if involved)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                     <div>
+                        <label for="lv_rwma_type">RWMA Type (predominant):</label>
+                        <select id="lv_rwma_type" onchange="updateLeftVentricleSummary()">
+                            <option value="" selected></option>
+                            <option value="Hypokinesis">Hypokinesis</option>
+                            <option value="Akinesis">Akinesis</option>
+                            <option value="Dyskinesis">Dyskinesis</option>
+                            <option value="Aneurysmal WMA">Aneurysmal</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="lv_diastolic_function">Diastolic Function:</label>
+                        <select id="lv_diastolic_function" onchange="updateLeftVentricleSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal diastolic function">Normal diastolic function</option>
+                            <option value="Grade I DD (impaired relaxation)">Grade I DD (impaired relaxation)</option>
+                            <option value="Grade II DD (pseudonormal)">Grade II DD (pseudonormal)</option>
+                            <option value="Grade III DD (restrictive)">Grade III DD (restrictive)</option>
+                            <option value="Indeterminate diastolic function">Indeterminate diastolic function</option>
+                            <option value="Unable to assess diastolic function">Unable to assess diastolic function</option>
+                            <option value="Advanced DD (L-wave present)">Advanced DD (L-wave present)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="lv_strain">Global Longitudinal Strain (GLS):</label>
+                        <select id="lv_strain" onchange="updateLeftVentricleSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal GLS (e.g. < -18%)">Normal GLS</option>
+                            <option value="Borderline GLS">Borderline GLS</option>
+                            <option value="Reduced GLS (e.g. > -15%)">Reduced GLS</option>
+                            <option value="Apical sparing pattern (suggestive of amyloid)">Apical sparing pattern (amyloid)</option>
+                            <option value="Technically limited strain">Technically limited strain</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="lv_obstruction">Outflow/Cavity Obstruction:</label>
+                        <select id="lv_obstruction" onchange="updateLeftVentricleSummary()">
+                            <option value="" selected></option>
+                            <option value="No obstruction">No obstruction</option>
+                            <option value="LVOT obstruction (resting)">LVOT obstruction (resting)</option>
+                            <option value="LVOT obstruction (dynamic/provoked)">LVOT obstruction (dynamic/provoked)</option>
+                            <option value="Mid-cavity obstruction">Mid-cavity obstruction</option>
+                            <option value="Apical cavity obliteration">Apical cavity obliteration</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="lv_other">Other LV Findings:</label>
+                        <select id="lv_other" multiple onchange="updateLeftVentricleSummary()" class="h-24">
+                            <option value="LV thrombus">LV thrombus (specify location/mobility)</option>
+                            <option value="Spontaneous echo contrast (SEC)">Spontaneous echo contrast (SEC)</option>
+                            <option value="Increased trabeculations / Non-compaction features">Increased trabeculations / Non-compaction</option>
+                            <option value="Ventricular septal defect (VSD)">Ventricular septal defect (VSD)</option>
+                            <option value="Signs of infiltrative cardiomyopathy">Signs of infiltrative cardiomyopathy</option>
+                            <option value="LV diverticulum">LV diverticulum</option>
+                        </select>
+                    </div>
+                </div>
+                <h3 class="summary-header">Left Ventricle Summary</h3>
+                <div id="leftVentricleSummary" class="summary-box">Select options to see the summary.</div>
+            </div>
+
+            <div id="rightVentricleSection" class="main-anatomical-section">
+                <h3 class="details-header">Right Ventricle</h3>
+                <div class="input-grid">
+                    <div>
+                        <label for="rv_size">RV Size:</label>
+                        <select id="rv_size" onchange="updateRightVentricleSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal RV size">Normal RV size</option>
+                            <option value="Mildly dilated RV">Mildly dilated RV</option>
+                            <option value="Moderately dilated RV">Moderately dilated RV</option>
+                            <option value="Severely dilated RV">Severely dilated RV</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="rv_wall_thickness">RV Wall Thickness:</label>
+                        <select id="rv_wall_thickness" onchange="updateRightVentricleSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal RV wall thickness">Normal RV wall thickness</option>
+                            <option value="RV hypertrophy">RV hypertrophy</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="rv_systolic_function">RV Systolic Function:</label>
+                        <select id="rv_systolic_function" onchange="updateRightVentricleSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal RV systolic function">Normal RV systolic function</option>
+                            <option value="Mildly reduced RV systolic function">Mildly reduced RV systolic function</option>
+                            <option value="Moderately reduced RV systolic function">Moderately reduced RV systolic function</option>
+                            <option value="Severely reduced RV systolic function">Severely reduced RV systolic function</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="rv_tapse">TAPSE:</label>
+                        <select id="rv_tapse" onchange="updateRightVentricleSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal TAPSE (>17mm)">Normal TAPSE (>17mm)</option>
+                            <option value="Reduced TAPSE (<17mm)">Reduced TAPSE (&lt;17mm)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="rv_s_prime">RV S' (Tissue Doppler):</label>
+                        <select id="rv_s_prime" onchange="updateRightVentricleSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal S' (>9.5 cm/s)">Normal S' (>9.5 cm/s)</option>
+                            <option value="Reduced S' (<9.5 cm/s)">Reduced S' (&lt;9.5 cm/s)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="rv_fac">RV Fractional Area Change (FAC):</label>
+                        <select id="rv_fac" onchange="updateRightVentricleSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal FAC (>35%)">Normal FAC (>35%)</option>
+                            <option value="Reduced FAC (<35%)">Reduced FAC (&lt;35%)</option>
+                        </select>
+                    </div>
+                     <div>
+                        <label for="rv_strain_fw">RV Free Wall Strain:</label>
+                        <select id="rv_strain_fw" onchange="updateRightVentricleSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal RVFWS (e.g. < -20%)">Normal RVFWS</option>
+                            <option value="Reduced RVFWS (e.g. > -20%)">Reduced RVFWS</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="rv_pressure_overload">Signs of RV Pressure Overload:</label>
+                        <select id="rv_pressure_overload" multiple onchange="updateRightVentricleSummary()" class="h-24">
+                            <option value="Septal flattening (D-shaped LV)">Septal flattening (D-shaped LV)</option>
+                            <option value="RV hypertrophy">RV hypertrophy</option>
+                            <option value="Dilated IVC with poor collapse">Dilated IVC with poor collapse</option>
+                            <option value="McConnell's sign">McConnell's sign (regional RWMAs)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="rv_volume_overload">Signs of RV Volume Overload:</label>
+                        <select id="rv_volume_overload" multiple onchange="updateRightVentricleSummary()" class="h-24">
+                            <option value="RV dilatation">RV dilatation</option>
+                            <option value="Paradoxical septal motion">Paradoxical septal motion</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="rv_other">Other RV Findings:</label>
+                        <select id="rv_other" multiple onchange="updateRightVentricleSummary()" class="h-24">
+                            <option value="RV thrombus">RV thrombus</option>
+                            <option value="RV mass/tumor">RV mass/tumor</option>
+                            <option value="Arrhythmogenic RV Cardiomyopathy (ARVC) features">ARVC features</option>
+                            <option value="Pacemaker/ICD lead in RV">Pacemaker/ICD lead in RV</option>
+                        </select>
+                    </div>
+                </div>
+                <h3 class="summary-header">Right Ventricle Summary</h3>
+                <div id="rightVentricleSummary" class="summary-box">Select options to see the summary.</div>
+            </div>
+
+            <div id="leftAtriumSection" class="main-anatomical-section">
+                <h3 class="details-header">Left Atrium</h3>
+                <div class="input-grid">
+                    <div>
+                        <label for="la_size_volume">LA Size/Volume:</label>
+                        <select id="la_size_volume" onchange="updateLeftAtriumSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal LA size/volume">Normal LA size/volume</option>
+                            <option value="Mildly dilated LA">Mildly dilated LA</option>
+                            <option value="Moderately dilated LA">Moderately dilated LA</option>
+                            <option value="Severely dilated LA">Severely dilated LA</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="la_thrombus_sec">LA Thrombus/SEC:</label>
+                        <select id="la_thrombus_sec" onchange="updateLeftAtriumSummary()">
+                            <option value="" selected></option>
+                            <option value="No LA thrombus or SEC">No LA thrombus or SEC</option>
+                            <option value="LA thrombus present (specify location)">LA thrombus present</option>
+                            <option value="LA appendage thrombus">LA appendage thrombus</option>
+                            <option value="Spontaneous echo contrast (SEC) in LA">Spontaneous echo contrast (SEC) in LA</option>
+                        </select>
+                    </div>
+                     <div>
+                        <label for="la_appendage_other">LA Appendage Other:</label>
+                        <select id="la_appendage_other" onchange="updateLeftAtriumSummary()">
+                            <option value="" selected></option>
+                            <option value="LAA visualized, appears normal">LAA visualized, normal</option>
+                            <option value="LAA not well visualized">LAA not well visualized</option>
+                            <option value="LAA closure device present">LAA closure device present</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="ias_findings">Interatrial Septum (IAS):</label>
+                        <select id="ias_findings" multiple onchange="updateLeftAtriumSummary()" class="h-24">
+                            <option value="IAS intact">IAS intact</option>
+                            <option value="Atrial septal aneurysm (ASA)">Atrial septal aneurysm (ASA)</option>
+                            <option value="Patent foramen ovale (PFO) - (if contrast study done)">Patent foramen ovale (PFO)</option>
+                            <option value="Atrial septal defect (ASD) - (specify type/size if known)">Atrial septal defect (ASD)</option>
+                            <option value="Lipomatous hypertrophy of IAS">Lipomatous hypertrophy of IAS</option>
+                            <option value="IAS closure device">IAS closure device</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="la_other">Other LA Findings:</label>
+                        <select id="la_other" onchange="updateLeftAtriumSummary()">
+                            <option value="" selected></option>
+                            <option value="LA mass/tumor">LA mass/tumor</option>
+                            <option value="Cor triatriatum">Cor triatriatum</option>
+                        </select>
+                    </div>
+                </div>
+                <h3 class="summary-header">Left Atrium Summary</h3>
+                <div id="leftAtriumSummary" class="summary-box">Select options to see the summary.</div>
+            </div>
+            
+            <div id="rightAtriumSection" class="main-anatomical-section">
+                <h3 class="details-header">Right Atrium</h3>
+                <div class="input-grid">
+                    <div>
+                        <label for="ra_size">RA Size:</label>
+                        <select id="ra_size" onchange="updateRightAtriumSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal RA size">Normal RA size</option>
+                            <option value="Mildly dilated RA">Mildly dilated RA</option>
+                            <option value="Moderately dilated RA">Moderately dilated RA</option>
+                            <option value="Severely dilated RA">Severely dilated RA</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="ra_thrombus_sec">RA Thrombus/SEC:</label>
+                        <select id="ra_thrombus_sec" onchange="updateRightAtriumSummary()">
+                            <option value="" selected></option>
+                            <option value="No RA thrombus or SEC">No RA thrombus or SEC</option>
+                            <option value="RA thrombus present">RA thrombus present</option>
+                            <option value="Spontaneous echo contrast (SEC) in RA">Spontaneous echo contrast (SEC) in RA</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="ra_other">Other RA Findings:</label>
+                        <select id="ra_other" multiple onchange="updateRightAtriumSummary()" class="h-24">
+                             <option value="Prominent Eustachian valve">Prominent Eustachian valve</option>
+                             <option value="Chiari network">Chiari network</option>
+                             <option value="RA mass/tumor">RA mass/tumor</option>
+                             <option value="Catheter/pacemaker lead in RA">Catheter/pacemaker lead in RA</option>
+                        </select>
+                    </div>
+                </div>
+                <h3 class="summary-header">Right Atrium Summary</h3>
+                <div id="rightAtriumSummary" class="summary-box">Select options to see the summary.</div>
+            </div>
+
+            <div id="mitralValveSection" class="main-anatomical-section">
+                <h3 class="details-header">Mitral Valve</h3>
+                <div class="input-grid">
+                    <div>
+                        <label for="mv_morphology">Leaflet Morphology:</label>
+                        <select id="mv_morphology" multiple onchange="updateMitralValveSummary()" class="h-32">
+                            <option value="Normal thin, pliable leaflets">Normal thin, pliable leaflets</option>
+                            <optgroup label="Pathology">
+                                <option value="Thickened leaflets">Thickened leaflets</option>
+                                <option value="Calcified leaflets (MAC extension?)">Calcified leaflets</option>
+                                <option value="Myxomatous degeneration">Myxomatous degeneration</option>
+                                <option value="Mitral valve prolapse (MVP) - (specify leaflet)">MVP</option>
+                                <option value="Flail mitral leaflet - (specify leaflet)">Flail mitral leaflet</option>
+                                <option value="Restricted leaflet motion (rheumatic, tethering)">Restricted leaflet motion</option>
+                                <option value="Vegetation(s) on MV">Vegetation(s) on MV</option>
+                                <option value="Cleft mitral valve leaflet">Cleft mitral valve leaflet</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="mv_annulus">Annulus:</label>
+                        <select id="mv_annulus" onchange="updateMitralValveSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal MV annulus">Normal MV annulus</option>
+                            <option value="Mitral annular calcification (MAC)">Mitral annular calcification (MAC)</option>
+                            <option value="Dilated MV annulus">Dilated MV annulus</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="mv_stenosis">Mitral Stenosis (MS):</label>
+                        <select id="mv_stenosis" onchange="updateMitralValveSummary()">
+                            <option value="" selected></option>
+                            <option value="No MS">No MS</option>
+                            <option value="Mild MS">Mild MS</option>
+                            <option value="Moderate MS">Moderate MS</option>
+                            <option value="Severe MS">Severe MS</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="mv_regurgitation">Mitral Regurgitation (MR):</label>
+                        <select id="mv_regurgitation" onchange="updateMitralValveSummary()">
+                            <option value="" selected></option>
+                            <option value="No/Trace MR">No/Trace MR</option>
+                            <option value="Mild MR">Mild MR</option>
+                            <option value="Moderate MR">Moderate MR</option>
+                            <option value="Severe MR">Severe MR</option>
+                        </select>
+                    </div>
+                     <div>
+                        <label for="mv_mr_etiology">MR Etiology (if known):</label>
+                        <select id="mv_mr_etiology" onchange="updateMitralValveSummary()">
+                            <option value="" selected></option>
+                            <option value="Primary (degenerative, rheumatic, flail, etc.)">Primary (degenerative, etc.)</option>
+                            <option value="Secondary (functional, ischemic, annular dilatation)">Secondary (functional, etc.)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="mv_prosthetic">Prosthetic MV / Repair:</label>
+                        <select id="mv_prosthetic" multiple onchange="updateMitralValveSummary()" class="h-24">
+                            <option value="No prosthetic MV or repair">No prosthetic/repair</option>
+                            <optgroup label="Prosthesis">
+                                <option value="Bioprosthetic MV">Bioprosthetic MV</option>
+                                <option value="Mechanical MV">Mechanical MV</option>
+                                <option value="Prosthetic MV dehiscence">Prosthetic MV dehiscence</option>
+                                <option value="Prosthetic MV stenosis">Prosthetic MV stenosis</option>
+                                <option value="Paravalvular MR">Paravalvular MR</option>
+                            </optgroup>
+                            <optgroup label="Repair">
+                                <option value="Mitral valve annuloplasty ring">Mitral valve annuloplasty ring</option>
+                                <option value="MitraClip device(s) present">MitraClip device(s) present</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+                <h3 class="summary-header">Mitral Valve Summary</h3>
+                <div id="mitralValveSummary" class="summary-box">Select options to see the summary.</div>
+            </div>
+
+            <div id="aorticValveSection" class="main-anatomical-section">
+                <h3 class="details-header">Aortic Valve</h3>
+                <div class="input-grid">
+                    <div>
+                        <label for="av_morphology">Leaflet Morphology:</label>
+                        <select id="av_morphology" multiple onchange="updateAorticValveSummary()" class="h-32">
+                            <option value="Normal tricuspid AV">Normal tricuspid AV</option>
+                             <optgroup label="Congenital">
+                                <option value="Bicuspid AV (specify raphe/orientation)">Bicuspid AV</option>
+                                <option value="Unicuspid AV">Unicuspid AV</option>
+                                <option value="Quadricuspid AV">Quadricuspid AV</option>
+                            </optgroup>
+                            <optgroup label="Pathology">
+                                <option value="Thickened/sclerotic AV leaflets (no stenosis)">Thickened/sclerotic AV leaflets</option>
+                                <option value="Calcified AV leaflets">Calcified AV leaflets</option>
+                                <option value="Restricted AV leaflet motion">Restricted AV leaflet motion</option>
+                                <option value="Vegetation(s) on AV">Vegetation(s) on AV</option>
+                                <option value="Lambl's excrescences">Lambl's excrescences</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                     <div>
+                        <label for="av_annulus_root">Annulus & Root:</label>
+                        <select id="av_annulus_root" onchange="updateAorticValveSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal AV annulus and root">Normal AV annulus and root</option>
+                            <option value="Dilated aortic annulus">Dilated aortic annulus</option>
+                            <option value="Dilated aortic root (see Aorta section)">Dilated aortic root</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="av_stenosis">Aortic Stenosis (AS):</label>
+                        <select id="av_stenosis" onchange="updateAorticValveSummary()">
+                            <option value="" selected></option>
+                            <option value="No AS (or aortic sclerosis only)">No AS / Sclerosis only</option>
+                            <option value="Mild AS">Mild AS</option>
+                            <option value="Moderate AS">Moderate AS</option>
+                            <option value="Severe AS">Severe AS</option>
+                            <option value="Critical AS">Critical AS</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="av_regurgitation">Aortic Regurgitation (AR):</label>
+                        <select id="av_regurgitation" onchange="updateAorticValveSummary()">
+                            <option value="" selected></option>
+                            <option value="No/Trace AR">No/Trace AR</option>
+                            <option value="Mild AR">Mild AR</option>
+                            <option value="Moderate AR">Moderate AR</option>
+                            <option value="Severe AR">Severe AR</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="av_ar_etiology">AR Etiology (if known):</label>
+                        <select id="av_ar_etiology" onchange="updateAorticValveSummary()">
+                            <option value="" selected></option>
+                            <option value="Primary (leaflet abnormality)">Primary (leaflet abnormality)</option>
+                            <option value="Secondary (root/annular dilatation)">Secondary (root/annular dilatation)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="av_prosthetic">Prosthetic AV / Repair:</label>
+                        <select id="av_prosthetic" multiple onchange="updateAorticValveSummary()" class="h-24">
+                            <option value="No prosthetic AV or repair">No prosthetic/repair</option>
+                            <optgroup label="Prosthesis">
+                                <option value="Bioprosthetic AV (SAVR/TAVR)">Bioprosthetic AV (SAVR/TAVR)</option>
+                                <option value="Mechanical AV">Mechanical AV</option>
+                                <option value="Prosthetic AV dehiscence">Prosthetic AV dehiscence</option>
+                                <option value="Prosthetic AV stenosis">Prosthetic AV stenosis</option>
+                                <option value="Paravalvular AR">Paravalvular AR</option>
+                            </optgroup>
+                             <option value="Ross procedure">Ross procedure</option>
+                        </select>
+                    </div>
+                </div>
+                <h3 class="summary-header">Aortic Valve Summary</h3>
+                <div id="aorticValveSummary" class="summary-box">Select options to see the summary.</div>
+            </div>
+
+            <div id="tricuspidValveSection" class="main-anatomical-section">
+                <h3 class="details-header">Tricuspid Valve</h3>
+                 <div class="input-grid">
+                    <div>
+                        <label for="tv_morphology">Leaflet Morphology:</label>
+                        <select id="tv_morphology" multiple onchange="updateTricuspidValveSummary()" class="h-24">
+                            <option value="Normal TV leaflets">Normal TV leaflets</option>
+                            <optgroup label="Pathology">
+                                <option value="Thickened TV leaflets">Thickened TV leaflets</option>
+                                <option value="Myxomatous TV leaflets">Myxomatous TV leaflets</option>
+                                <option value="Tricuspid valve prolapse (TVP)">TVP</option>
+                                <option value="Flail TV leaflet">Flail TV leaflet</option>
+                                <option value="Vegetation(s) on TV">Vegetation(s) on TV</option>
+                                <option value="Carcinoid involvement of TV">Carcinoid involvement of TV</option>
+                                <option value="Ebstein's anomaly features">Ebstein's anomaly features</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                     <div>
+                        <label for="tv_annulus">Annulus:</label>
+                        <select id="tv_annulus" onchange="updateTricuspidValveSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal TV annulus">Normal TV annulus</option>
+                            <option value="Dilated TV annulus">Dilated TV annulus</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="tv_stenosis">Tricuspid Stenosis (TS):</label>
+                        <select id="tv_stenosis" onchange="updateTricuspidValveSummary()">
+                            <option value="" selected></option>
+                            <option value="No TS">No TS</option>
+                            <option value="Mild TS">Mild TS</option>
+                            <option value="Moderate TS">Moderate TS</option>
+                            <option value="Severe TS">Severe TS</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="tv_regurgitation">Tricuspid Regurgitation (TR):</label>
+                        <select id="tv_regurgitation" onchange="updateTricuspidValveSummary()">
+                            <option value="" selected></option>
+                            <option value="No/Trace TR">No/Trace TR</option>
+                            <option value="Mild TR">Mild TR</option>
+                            <option value="Moderate TR">Moderate TR</option>
+                            <option value="Severe TR">Severe TR</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="tv_tr_etiology">TR Etiology (if known):</label>
+                        <select id="tv_tr_etiology" onchange="updateTricuspidValveSummary()">
+                            <option value="" selected></option>
+                            <option value="Primary (leaflet abnormality)">Primary (leaflet abnormality)</option>
+                            <option value="Secondary (functional, annular dilatation, RV dysfunction)">Secondary (functional)</option>
+                            <option value="Pacemaker lead impingement">Pacemaker lead impingement</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="tv_prosthetic">Prosthetic TV / Repair:</label>
+                        <select id="tv_prosthetic" onchange="updateTricuspidValveSummary()">
+                            <option value="" selected></option>
+                            <option value="No prosthetic TV or repair">No prosthetic/repair</option>
+                            <option value="Bioprosthetic TV">Bioprosthetic TV</option>
+                            <option value="Mechanical TV (rare)">Mechanical TV</option>
+                            <option value="Tricuspid annuloplasty ring">Tricuspid annuloplasty ring</option>
+                        </select>
+                    </div>
+                </div>
+                <h3 class="summary-header">Tricuspid Valve Summary</h3>
+                <div id="tricuspidValveSummary" class="summary-box">Select options to see the summary.</div>
+            </div>
+
+            <div id="pulmonicValveSection" class="main-anatomical-section">
+                <h3 class="details-header">Pulmonic Valve</h3>
+                <div class="input-grid">
+                    <div>
+                        <label for="pv_morphology">Leaflet Morphology:</label>
+                        <select id="pv_morphology" onchange="updatePulmonicValveSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal PV leaflets">Normal PV leaflets</option>
+                            <option value="Thickened PV leaflets">Thickened PV leaflets</option>
+                            <option value="Doming PV leaflets (stenosis)">Doming PV leaflets</option>
+                            <option value="Vegetation(s) on PV">Vegetation(s) on PV</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="pv_stenosis">Pulmonic Stenosis (PS):</label>
+                        <select id="pv_stenosis" onchange="updatePulmonicValveSummary()">
+                            <option value="" selected></option>
+                            <option value="No PS">No PS</option>
+                            <option value="Mild PS">Mild PS</option>
+                            <option value="Moderate PS">Moderate PS</option>
+                            <option value="Severe PS">Severe PS</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="pv_regurgitation">Pulmonic Regurgitation (PR):</label>
+                        <select id="pv_regurgitation" onchange="updatePulmonicValveSummary()">
+                            <option value="" selected></option>
+                            <option value="Physiological/Trace PR">Physiological/Trace PR</option>
+                            <option value="Mild PR">Mild PR</option>
+                            <option value="Moderate PR">Moderate PR</option>
+                            <option value="Severe PR">Severe PR</option>
+                        </select>
+                    </div>
+                     <div>
+                        <label for="pv_prosthetic">Prosthetic PV / Repair:</label>
+                        <select id="pv_prosthetic" onchange="updatePulmonicValveSummary()">
+                            <option value="" selected></option>
+                            <option value="No prosthetic PV or repair">No prosthetic/repair</option>
+                            <option value="Bioprosthetic PV (e.g. Melody, Harmony)">Bioprosthetic PV</option>
+                            <option value="Homograft conduit">Homograft conduit</option>
+                        </select>
+                    </div>
+                </div>
+                <h3 class="summary-header">Pulmonic Valve Summary</h3>
+                <div id="pulmonicValveSummary" class="summary-box">Select options to see the summary.</div>
+            </div>
+
+            <div id="aortaSection" class="main-anatomical-section">
+                <h3 class="details-header">Aorta</h3>
+                <div class="input-grid">
+                    <div>
+                        <label for="ao_root_dim">Aortic Root Dimension:</label>
+                        <select id="ao_root_dim" onchange="updateAortaSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal aortic root">Normal aortic root</option>
+                            <option value="Mildly dilated aortic root">Mildly dilated aortic root</option>
+                            <option value="Moderately dilated aortic root">Moderately dilated aortic root</option>
+                            <option value="Severely dilated aortic root (aneurysmal)">Severely dilated aortic root (aneurysmal)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="ao_asc_dim">Ascending Aorta Dimension:</label>
+                        <select id="ao_asc_dim" onchange="updateAortaSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal ascending aorta">Normal ascending aorta</option>
+                            <option value="Mildly dilated ascending aorta">Mildly dilated ascending aorta</option>
+                            <option value="Moderately dilated ascending aorta">Moderately dilated ascending aorta</option>
+                            <option value="Severely dilated ascending aorta (aneurysmal)">Severely dilated ascending aorta (aneurysmal)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="ao_arch_desc">Aortic Arch:</label>
+                        <select id="ao_arch_desc" onchange="updateAortaSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal aortic arch">Normal aortic arch</option>
+                            <option value="Atherosclerotic plaque in arch">Atherosclerotic plaque in arch</option>
+                            <option value="Aortic arch aneurysm">Aortic arch aneurysm</option>
+                            <option value="Coarctation of aorta (if visualized)">Coarctation of aorta</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="ao_desc_thoracic">Descending Thoracic Aorta:</label>
+                        <select id="ao_desc_thoracic" onchange="updateAortaSummary()">
+                            <option value="" selected></option>
+                            <option value="Normal descending thoracic aorta">Normal descending thoracic aorta</option>
+                            <option value="Atherosclerotic plaque in desc aorta">Atherosclerotic plaque</option>
+                            <option value="Descending thoracic aorta aneurysm">Descending thoracic aorta aneurysm</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="ao_dissection">Aortic Dissection/Intramural Hematoma:</label>
+                        <select id="ao_dissection" onchange="updateAortaSummary()">
+                            <option value="" selected></option>
+                            <option value="No evidence of dissection/IMH">No evidence of dissection/IMH</option>
+                            <option value="Aortic dissection flap visualized (specify location)">Aortic dissection flap</option>
+                            <option value="Intramural hematoma (IMH) visualized">Intramural hematoma (IMH)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="ao_other">Other Aortic Findings:</label>
+                        <select id="ao_other" multiple onchange="updateAortaSummary()" class="h-24">
+                            <option value="Aortic graft present">Aortic graft present</option>
+                            <option value="Sinus of Valsalva aneurysm">Sinus of Valsalva aneurysm</option>
+                            <option value="Penetrating atherosclerotic ulcer (PAU)">Penetrating atherosclerotic ulcer (PAU)</option>
+                             <option value="IABP in place">IABP in place</option>
+                        </select>
+                    </div>
+                </div>
+                <h3 class="summary-header">Aorta Summary</h3>
+                <div id="aortaSummary" class="summary-box">Select options to see the summary.</div>
+            </div>
+
+            <div id="ivcSvcPeriSection" class="main-anatomical-section">
+                <h3 class="details-header">IVC / SVC / Pericardium</h3>
+                <div class="input-grid">
+                    <div>
+                        <label for="ivc_assessment">IVC Assessment (RA Pressure):</label>
+                        <select id="ivc_assessment" onchange="updateIvcSvcPeriSummary()">
+                            <option value="" selected></option>
+                            <option value="IVC normal size, collapses >50% (RAP ~3mmHg)">&lt;2.1cm + &gt;50% collapse = 3mmHg RAP</option>
+                            <option value="IVC normal size, collapses <50% (RAP ~8mmHg)">&lt;2.1cm + &lt;50% collapse = 8mmHg RAP</option>
+                            <option value="IVC dilated >2.1cm, collapses >50% (RAP ~8mmHg)">&gt;2.1cm + &gt;50% collapse = 8mmHg RAP</option>
+                            <option value="IVC dilated >2.1cm, collapses <50% (RAP ~15mmHg)">&gt;2.1cm + &lt;50% collapse = 15mmHg RAP</option>
+                            <option value="IVC plethoric, no collapse (RAP >15-20mmHg)">IVC plethoric (RAP >15-20mmHg)</option>
+                            <option value="Patient mechanically ventilated - RAP estimate unreliable">Patient Mechanically Ventilated - RAP unreliable</option>
+                            <option value="IVC not adequately visualized">IVC not adequately visualized</option>
+                        </select>
+                    </div>
+                     <div>
+                        <label for="svc_findings">SVC Findings:</label>
+                        <select id="svc_findings" onchange="updateIvcSvcPeriSummary()">
+                            <option value="" selected></option>
+                            <option value="SVC not assessed/visualized">SVC not assessed/visualized</option>
+                            <option value="Normal SVC">Normal SVC</option>
+                            <option value="Dilated SVC">Dilated SVC</option>
+                            <option value="SVC thrombus">SVC thrombus</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="pericardial_effusion">Pericardial Effusion:</label>
+                        <select id="pericardial_effusion" onchange="updateIvcSvcPeriSummary()">
+                            <option value="" selected></option>
+                            <option value="No pericardial effusion">No pericardial effusion</option>
+                            <option value="Trivial pericardial effusion">Trivial pericardial effusion</option>
+                            <option value="Small pericardial effusion">Small pericardial effusion</option>
+                            <option value="Moderate pericardial effusion">Moderate pericardial effusion</option>
+                            <option value="Large pericardial effusion">Large pericardial effusion</option>
+                            <option value="Loculated pericardial effusion">Loculated pericardial effusion</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="tamponade_constriction">Tamponade/Constriction:</label>
+                        <select id="tamponade_constriction" multiple onchange="updateIvcSvcPeriSummary()" class="h-24">
+                            <option value="No signs of tamponade">No signs of tamponade</option>
+                            <option value="Echocardiographic signs of tamponade physiology">Signs of tamponade physiology</option>
+                            <option value="No signs of constrictive pericarditis">No signs of constrictive pericarditis</option>
+                            <option value="Features suggestive of constrictive pericarditis">Suggestive of constrictive pericarditis</option>
+                            <option value="Pericardial thickening">Pericardial thickening</option>
+                            <option value="Pericardial calcification">Pericardial calcification</option>
+                        </select>
+                    </div>
+                     <div>
+                        <label for="pleural_effusion">Pleural Effusion(s):</label>
+                        <select id="pleural_effusion" onchange="updateIvcSvcPeriSummary()">
+                            <option value="" selected></option>
+                            <option value="No pleural effusion">No pleural effusion</option>
+                            <option value="Left pleural effusion">Left pleural effusion</option>
+                            <option value="Right pleural effusion">Right pleural effusion</option>
+                            <option value="Bilateral pleural effusions">Bilateral pleural effusions</option>
+                        </select>
+                    </div>
+                </div>
+                <h3 class="summary-header">IVC / SVC / Pericardium Summary</h3>
+                <div id="ivcSvcPeriSummary" class="summary-box">Select options to see the summary.</div>
+            </div>
+        </div>
+
+        <div class="download-button-container text-center no-print"> 
+            <button id="generatePdfButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-150 ease-in-out">
+                Save Report & Generate PDF
+            </button>
+        </div>
+
+        <div id="printableReport" style="display: none;"></div>
+
+        <div id="messageModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center no-print" style="display: none;">
+            <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md mx-auto">
+                <h3 id="modalTitle" class="text-lg font-semibold text-blue-400 mb-4">Notification</h3>
+                <p id="modalMessage" class="text-gray-300 mb-6"></p>
+                <button id="modalCloseButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded w-full">
+                    OK
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        // Firebase SDK imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase instance variables
+        let db, auth, userId, firebaseAppInstance; // Renamed 'app' to 'firebaseAppInstance' to avoid conflict
+        
+        // These __app_id and __firebase_config variables are expected to be injected by the environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'echo-report-app-default'; // Default app ID if not provided
+        const firebaseConfigString = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+        let firebaseConfig = null;
+
+        if (firebaseConfigString) {
+            try {
+                firebaseConfig = JSON.parse(firebaseConfigString);
+            } catch (e) {
+                console.error("Error parsing Firebase config:", e);
+                displayModalMessage("Error: Firebase configuration is invalid. Saving will not work.", "Configuration Error");
+            }
+        } else {
+            console.warn("Firebase config (__firebase_config) is not available. Saving will not work.");
+            // displayModalMessage("Warning: Firebase configuration is missing. Saving will not work.", "Configuration Warning");
+            // ^ Don't show modal for this on initial load, as it might be confusing if user doesn't intend to save.
+        }
+
+        // --- DOMContentLoaded: Initialize summaries, date, Firebase, and button listeners ---
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize all summaries on page load
+            updateAllSummaries();
+
+            // Set default date for the report
+            const today = new Date().toISOString().split('T')[0];
+            const reportDateEl = document.getElementById('report_date');
+            if (reportDateEl) {
+                reportDateEl.value = today;
+            }
+
+            // Initialize Firebase if config is valid
+            if (firebaseConfig) {
+                try {
+                    firebaseAppInstance = initializeApp(firebaseConfig);
+                    auth = getAuth(firebaseAppInstance);
+                    db = getFirestore(firebaseAppInstance);
+                    setLogLevel('debug'); // 'debug' for verbose logging, 'silent' for none
+
+                    onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            userId = user.uid;
+                            console.log("User authenticated with UID:", userId);
+                        } else {
+                            // No user, try to sign in
+                            console.log("User not authenticated. Attempting sign-in...");
+                            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                            if (initialAuthToken) {
+                                try {
+                                    await signInWithCustomToken(auth, initialAuthToken);
+                                    console.log("Signed in with custom token.");
+                                } catch (error) {
+                                    console.error("Error signing in with custom token, trying anonymous:", error);
+                                    try {
+                                        await signInAnonymously(auth);
+                                        console.log("Signed in anonymously after custom token failure.");
+                                    } catch (anonError) {
+                                        console.error("Error signing in anonymously:", anonError);
+                                        displayModalMessage("Authentication failed. Saving reports may not work.", "Auth Error");
+                                    }
+                                }
+                            } else {
+                                try {
+                                    await signInAnonymously(auth);
+                                    console.log("Signed in anonymously.");
+                                } catch (anonError) {
+                                    console.error("Error signing in anonymously:", anonError);
+                                    displayModalMessage("Authentication failed. Saving reports may not work.", "Auth Error");
+                                }
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error("Firebase initialization error:", error);
+                    displayModalMessage("Error initializing Firebase. Saving reports may not work.", "Firebase Error");
+                }
+            } else {
+                 console.warn("Firebase is not configured. Report saving will be disabled.");
+                 // Optionally disable the save button or show a persistent message
+            }
+
+            const pdfButton = document.getElementById('generatePdfButton');
+            if (pdfButton) {
+                pdfButton.addEventListener('click', handleSaveAndPrint);
+            }
+            
+            // Modal close button listener
+            const modalCloseButton = document.getElementById('modalCloseButton');
+            if(modalCloseButton) {
+                modalCloseButton.addEventListener('click', () => {
+                    const modal = document.getElementById('messageModal');
+                    if(modal) modal.style.display = 'none';
+                });
+            }
+        });
+
+        // --- Helper to get selected text or values from form elements ---
+        function getSelectedText(elementId) {
+            const element = document.getElementById(elementId);
+            if (!element) return "";
+            if (element.multiple) {
+                const selectedOptions = Array.from(element.selectedOptions).map(opt => opt.text);
+                return selectedOptions.length > 0 ? selectedOptions.join(', ') : "";
+            }
+            if (element.selectedIndex !== -1 && element.value !== "") {
+                return element.options[element.selectedIndex].text;
+            }
+            return "";
+        }
+        
+        // --- Helper to format parts of the summary ---
+        function formatPart(label, value) {
+            if (value && value.toLowerCase() !== 'none' && value.toLowerCase() !== 'no' && !value.toLowerCase().startsWith("no ") && !value.toLowerCase().includes("normal") && !value.toLowerCase().startsWith("physiological")) {
+                const sentenceEnd = value.endsWith('.') ? value : `${value}.`;
+                return `${label}: ${sentenceEnd}`;
+            } else if (value) { 
+                return value.endsWith('.') ? value : `${value}.`;
+            }
+            return "";
+        }
+
+        // --- Helper to build the final summary string ---
+        function buildSummary(parts) {
+            const summary = parts.filter(p => p).join(" ").trim();
+            return summary || "Select options to see the summary.";
+        }
+        
+        // --- Functions to update summaries for each section (updateLeftVentricleSummary, etc.) ---
+        // These functions (updateLeftVentricleSummary, updateRightVentricleSummary, ...)
+        // remain largely the same as in the original file.
+        // Make sure they are all defined here or copied from the original.
+        // For brevity, I'll include one example and a function to call all updates.
+
+        function updateLeftVentricleSummary() {
+            const summaryDiv = document.getElementById('leftVentricleSummary');
+            if (!summaryDiv) return;
+            let parts = [];
+            parts.push(formatPart("LV Size/Shape", getSelectedText('lv_size_shape')));
+            parts.push(formatPart("LV Wall Thickness", getSelectedText('lv_wall_thickness')));
+            const ef = getSelectedText('lv_systolic_function_global');
+            const efMethod = getSelectedText('lv_ef_method');
+            if (ef) {
+                let efPart = `Global LV systolic function is ${ef.toLowerCase()}`;
+                if (efMethod && !ef.toLowerCase().includes("unable to assess ef")) efPart += ` by ${efMethod.toLowerCase()} method`;
+                parts.push(efPart.endsWith('.') ? efPart : efPart + ".");
+            }
+            const rwma = getSelectedText('lv_rwma');
+            if (rwma) {
+                if (rwma.toLowerCase() === 'no rwmas') {
+                    parts.push("No regional wall motion abnormalities.");
+                } else if (rwma.toLowerCase().includes('present')) {
+                    let rwmaDetail = "RWMAs are present";
+                    const locations = getSelectedText('lv_rwma_location');
+                    const type = getSelectedText('lv_rwma_type');
+                    if (locations) rwmaDetail += ` involving the ${locations.toLowerCase().replace(/ rwma/g, '')}`;
+                    if (type) rwmaDetail += ` (predominantly ${type.toLowerCase()})`;
+                    parts.push(rwmaDetail.endsWith('.') ? rwmaDetail : rwmaDetail + ".");
+                } else {
+                     parts.push(formatPart("Regional Wall Motion", rwma));
+                }
+            }
+            parts.push(formatPart("LV Diastolic Function", getSelectedText('lv_diastolic_function')));
+            parts.push(formatPart("GLS", getSelectedText('lv_strain')));
+            parts.push(formatPart("LV Obstruction", getSelectedText('lv_obstruction')));
+            const otherLV = getSelectedText('lv_other');
+            if (otherLV) parts.push(`Other LV findings: ${otherLV}.`);
+            summaryDiv.textContent = buildSummary(parts);
+        }
+        function updateRightVentricleSummary() {
+            const summaryDiv = document.getElementById('rightVentricleSummary');
+            if (!summaryDiv) return;
+            let parts = [];
+            parts.push(formatPart("RV Size", getSelectedText('rv_size')));
+            parts.push(formatPart("RV Wall Thickness", getSelectedText('rv_wall_thickness')));
+            parts.push(formatPart("RV Systolic Function", getSelectedText('rv_systolic_function')));
+            parts.push(formatPart("TAPSE", getSelectedText('rv_tapse')));
+            parts.push(formatPart("RV S'", getSelectedText('rv_s_prime')));
+            parts.push(formatPart("RV FAC", getSelectedText('rv_fac')));
+            parts.push(formatPart("RV Free Wall Strain", getSelectedText('rv_strain_fw')));
+            const pressureOverload = getSelectedText('rv_pressure_overload');
+            if (pressureOverload) parts.push(`Signs of RV pressure overload include: ${pressureOverload}.`);
+            const volumeOverload = getSelectedText('rv_volume_overload');
+            if (volumeOverload) parts.push(`Signs of RV volume overload include: ${volumeOverload}.`);
+            const otherRV = getSelectedText('rv_other');
+            if (otherRV) parts.push(`Other RV findings: ${otherRV}.`);
+            summaryDiv.textContent = buildSummary(parts);
+        }
+        function updateLeftAtriumSummary() {
+            const summaryDiv = document.getElementById('leftAtriumSummary');
+            if (!summaryDiv) return;
+            let parts = [];
+            parts.push(formatPart("LA Size/Volume", getSelectedText('la_size_volume')));
+            parts.push(formatPart("LA Thrombus/SEC", getSelectedText('la_thrombus_sec')));
+            parts.push(formatPart("LA Appendage", getSelectedText('la_appendage_other')));
+            const ias = getSelectedText('ias_findings');
+            if (ias) parts.push(`Interatrial Septum: ${ias}.`);
+            parts.push(formatPart("Other LA Findings", getSelectedText('la_other')));
+            summaryDiv.textContent = buildSummary(parts);
+        }
+        function updateRightAtriumSummary() {
+            const summaryDiv = document.getElementById('rightAtriumSummary');
+            if (!summaryDiv) return;
+            let parts = [];
+            parts.push(formatPart("RA Size", getSelectedText('ra_size')));
+            parts.push(formatPart("RA Thrombus/SEC", getSelectedText('ra_thrombus_sec')));
+            const otherRA = getSelectedText('ra_other');
+            if (otherRA) parts.push(`Other RA findings: ${otherRA}.`);
+            summaryDiv.textContent = buildSummary(parts);
+        }
+        function updateMitralValveSummary() {
+            const summaryDiv = document.getElementById('mitralValveSummary');
+            if (!summaryDiv) return;
+            let parts = [];
+            const morphology = getSelectedText('mv_morphology');
+            if (morphology) parts.push(`MV Leaflet Morphology: ${morphology}.`);
+            parts.push(formatPart("MV Annulus", getSelectedText('mv_annulus')));
+            parts.push(formatPart("Mitral Stenosis", getSelectedText('mv_stenosis')));
+            parts.push(formatPart("Mitral Regurgitation", getSelectedText('mv_regurgitation')));
+            parts.push(formatPart("MR Etiology", getSelectedText('mv_mr_etiology')));
+            const prostheticMV = getSelectedText('mv_prosthetic');
+            if (prostheticMV && prostheticMV.toLowerCase() !== "no prosthetic/repair" && prostheticMV.toLowerCase() !== "no prosthetic mv or repair") {
+                 parts.push(`Prosthetic MV/Repair: ${prostheticMV}.`);
+            } else if (prostheticMV) {
+                parts.push(`${prostheticMV}.`);
+            }
+            summaryDiv.textContent = buildSummary(parts);
+        }
+        function updateAorticValveSummary() {
+            const summaryDiv = document.getElementById('aorticValveSummary');
+            if (!summaryDiv) return;
+            let parts = [];
+            const morphology = getSelectedText('av_morphology');
+            if (morphology) parts.push(`AV Leaflet Morphology: ${morphology}.`);
+            parts.push(formatPart("AV Annulus/Root", getSelectedText('av_annulus_root')));
+            parts.push(formatPart("Aortic Stenosis", getSelectedText('av_stenosis')));
+            parts.push(formatPart("Aortic Regurgitation", getSelectedText('av_regurgitation')));
+            parts.push(formatPart("AR Etiology", getSelectedText('av_ar_etiology')));
+            const prostheticAV = getSelectedText('av_prosthetic');
+             if (prostheticAV && prostheticAV.toLowerCase() !== "no prosthetic/repair" && prostheticAV.toLowerCase() !== "no prosthetic av or repair") {
+                 parts.push(`Prosthetic AV/Repair: ${prostheticAV}.`);
+            } else if (prostheticAV) {
+                parts.push(`${prostheticAV}.`);
+            }
+            summaryDiv.textContent = buildSummary(parts);
+        }
+        function updateTricuspidValveSummary() {
+            const summaryDiv = document.getElementById('tricuspidValveSummary');
+            if (!summaryDiv) return;
+            let parts = [];
+            const morphology = getSelectedText('tv_morphology');
+            if (morphology) parts.push(`TV Leaflet Morphology: ${morphology}.`);
+            parts.push(formatPart("TV Annulus", getSelectedText('tv_annulus')));
+            parts.push(formatPart("Tricuspid Stenosis", getSelectedText('tv_stenosis')));
+            parts.push(formatPart("Tricuspid Regurgitation", getSelectedText('tv_regurgitation')));
+            parts.push(formatPart("TR Etiology", getSelectedText('tv_tr_etiology')));
+            const prostheticTV = getSelectedText('tv_prosthetic');
+            if (prostheticTV && prostheticTV.toLowerCase() !== "no prosthetic/repair" && prostheticTV.toLowerCase() !== "no prosthetic tv or repair") {
+                 parts.push(`Prosthetic TV/Repair: ${prostheticTV}.`);
+            } else if (prostheticTV) {
+                parts.push(`${prostheticTV}.`);
+            }
+            summaryDiv.textContent = buildSummary(parts);
+        }
+        function updatePulmonicValveSummary() {
+            const summaryDiv = document.getElementById('pulmonicValveSummary');
+            if (!summaryDiv) return;
+            let parts = [];
+            parts.push(formatPart("PV Leaflet Morphology", getSelectedText('pv_morphology')));
+            parts.push(formatPart("Pulmonic Stenosis", getSelectedText('pv_stenosis')));
+            parts.push(formatPart("Pulmonic Regurgitation", getSelectedText('pv_regurgitation')));
+            const prostheticPV = getSelectedText('pv_prosthetic');
+            if (prostheticPV && prostheticPV.toLowerCase() !== "no prosthetic/repair" && prostheticPV.toLowerCase() !== "no prosthetic pv or repair") {
+                 parts.push(`Prosthetic PV/Repair: ${prostheticPV}.`);
+            } else if (prostheticPV) {
+                parts.push(`${prostheticPV}.`);
+            }
+            summaryDiv.textContent = buildSummary(parts);
+        }
+        function updateAortaSummary() {
+            const summaryDiv = document.getElementById('aortaSummary');
+            if (!summaryDiv) return;
+            let parts = [];
+            parts.push(formatPart("Aortic Root", getSelectedText('ao_root_dim')));
+            parts.push(formatPart("Ascending Aorta", getSelectedText('ao_asc_dim')));
+            parts.push(formatPart("Aortic Arch", getSelectedText('ao_arch_desc')));
+            parts.push(formatPart("Descending Thoracic Aorta", getSelectedText('ao_desc_thoracic')));
+            parts.push(formatPart("Aortic Dissection/IMH", getSelectedText('ao_dissection')));
+            const otherAortic = getSelectedText('ao_other');
+            if (otherAortic) parts.push(`Other Aortic Findings: ${otherAortic}.`);
+            summaryDiv.textContent = buildSummary(parts);
+        }
+        function updateIvcSvcPeriSummary() {
+            const summaryDiv = document.getElementById('ivcSvcPeriSummary');
+            if (!summaryDiv) return;
+            let parts = [];
+            const ivc = getSelectedText('ivc_assessment');
+            if (ivc) parts.push(ivc.endsWith('.') ? ivc : ivc + '.'); // IVC text is already a full sentence
+            parts.push(formatPart("SVC Findings", getSelectedText('svc_findings')));
+            parts.push(formatPart("Pericardial Effusion", getSelectedText('pericardial_effusion')));
+            const tamponadeConstriction = getSelectedText('tamponade_constriction');
+            if (tamponadeConstriction) parts.push(`Tamponade/Constriction: ${tamponadeConstriction}.`);
+            parts.push(formatPart("Pleural Effusion(s)", getSelectedText('pleural_effusion')));
+            summaryDiv.textContent = buildSummary(parts);
+        }
+
+        function updateAllSummaries() {
+            updateLeftVentricleSummary();
+            updateRightVentricleSummary();
+            updateLeftAtriumSummary();
+            updateRightAtriumSummary();
+            updateMitralValveSummary();
+            updateAorticValveSummary();
+            updateTricuspidValveSummary();
+            updatePulmonicValveSummary();
+            updateAortaSummary();
+            updateIvcSvcPeriSummary();
+        }
+        
+        // --- Function to gather all form data ---
+        function getAllFormData() {
+            const data = {
+                studentName: document.getElementById('student_name')?.value.trim() || '',
+                studyIdInfo: document.getElementById('study_id_info')?.value.trim() || '',
+                reportDate: document.getElementById('report_date')?.value || '',
+                sections: {} // To store data from each anatomical section
+            };
+
+            // Iterate over each main anatomical section (excluding the first student info section)
+            const sectionDivs = document.querySelectorAll('.main-anatomical-section');
+            sectionDivs.forEach((sectionDiv, index) => {
+                if (index === 0) return; // Skip the first section (Student & Study Information)
+
+                const sectionId = sectionDiv.id.replace('Section', ''); // e.g., 'leftVentricle' from 'leftVentricleSection'
+                data.sections[sectionId] = {};
+                
+                const selects = sectionDiv.querySelectorAll('select');
+                selects.forEach(select => {
+                    const selectId = select.id; // e.g., 'lv_size_shape'
+                    if (select.multiple) {
+                        data.sections[sectionId][selectId] = Array.from(select.selectedOptions).map(opt => opt.value);
+                    } else {
+                        data.sections[sectionId][selectId] = select.value;
+                    }
+                });
+            });
+            return data;
+        }
+
+        // --- Function to save report data to Firestore ---
+        async function saveReportData(reportData) {
+            if (!db || !userId) {
+                console.error("Firestore not initialized or user not authenticated. Cannot save.");
+                displayModalMessage("Error: Cannot save report. Firebase not ready or user not logged in.", "Save Error");
+                return null;
+            }
+            if (!firebaseConfig) { // Double check, though covered by button logic too
+                displayModalMessage("Error: Firebase is not configured. Cannot save report.", "Configuration Error");
+                return null;
+            }
+
+            try {
+                const reportCollectionPath = `artifacts/${appId}/users/${userId}/echo_reports`;
+                const docRef = await addDoc(collection(db, reportCollectionPath), {
+                    ...reportData,
+                    createdAt: serverTimestamp(), // Automatically adds a server-side timestamp
+                    updatedAt: serverTimestamp()  // For consistency, though might be same as createdAt for new docs
+                });
+                console.log("Report data saved with ID: ", docRef.id);
+                displayModalMessage("Report saved successfully to your records!", "Report Saved");
+                return docRef.id; // Return the new document ID
+            } catch (error) {
+                console.error("Error saving report data to Firestore: ", error);
+                displayModalMessage(`Error saving report: ${error.message}. Please try again.`, "Save Error");
+                return null;
+            }
+        }
+        
+        // --- Function to display modal messages ---
+        function displayModalMessage(message, title = "Notification") {
+            const modal = document.getElementById('messageModal');
+            const modalTitleEl = document.getElementById('modalTitle');
+            const modalMessageEl = document.getElementById('modalMessage');
+
+            if (modal && modalTitleEl && modalMessageEl) {
+                modalTitleEl.textContent = title;
+                modalMessageEl.textContent = message;
+                modal.style.display = 'flex';
+            } else {
+                // Fallback if modal elements are somehow not found (should not happen)
+                console.warn("Modal elements not found. Message:", title, "-", message);
+                // Avoid using alert() as per instructions. console.log is a silent fallback.
+            }
+        }
+
+        // --- Main function to handle saving data and then printing ---
+        async function handleSaveAndPrint() {
+            const printableDiv = document.getElementById('printableReport');
+            if (!printableDiv) {
+                console.error("Printable report area not found.");
+                return;
+            }
+
+            // 1. Gather all form data
+            const formDataToSave = getAllFormData();
+
+            // 2. Save data to Firestore (if Firebase is configured)
+            if (firebaseConfig && db && userId) { // Check if Firebase is ready
+                const savedReportId = await saveReportData(formDataToSave);
+                if (!savedReportId) {
+                    // Optional: Decide if PDF generation should proceed if saving fails.
+                    // For now, we'll let it proceed but the user got an error message.
+                    console.warn("Report saving failed, but proceeding with PDF generation.");
+                }
+            } else {
+                console.warn("Firebase not configured or user not authenticated. Skipping save, proceeding with PDF generation only.");
+                displayModalMessage("Warning: Report will be generated for print/PDF, but not saved to database due to configuration/login issue.", "Save Skipped");
+            }
+            
+            // 3. Generate HTML content for the PDF/print
+            let reportHTML = `<h1>Echocardiography Findings Report</h1>`;
+            const studentName = formDataToSave.studentName || 'N/A';
+            const studyIdInfo = formDataToSave.studyIdInfo || 'N/A';
+            const reportDateInput = formDataToSave.reportDate;
+            const reportDate = reportDateInput ? new Date(reportDateInput + 'T00:00:00Z').toLocaleDateString() : new Date().toLocaleDateString(); // Ensure UTC interpretation if only date
+
+            reportHTML += `
+                <div style="margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+                    <p><strong>Student:</strong> ${studentName}</p>
+                    <p><strong>Study ID/Name:</strong> ${studyIdInfo}</p>
+                    <p><strong>Date:</strong> ${reportDate}</p>
+                </div>
+            `;
+            
+            const sectionsMeta = [ // Use the IDs of the summary divs
+                { id: 'leftVentricleSummary', title: 'Left Ventricle' },
+                { id: 'rightVentricleSummary', title: 'Right Ventricle' },
+                { id: 'leftAtriumSummary', title: 'Left Atrium' },
+                { id: 'rightAtriumSummary', title: 'Right Atrium' },
+                { id: 'mitralValveSummary', title: 'Mitral Valve' },
+                { id: 'aorticValveSummary', title: 'Aortic Valve' },
+                { id: 'tricuspidValveSummary', title: 'Tricuspid Valve' },
+                { id: 'pulmonicValveSummary', title: 'Pulmonic Valve' },
+                { id: 'aortaSummary', title: 'Aorta' },
+                { id: 'ivcSvcPeriSummary', title: 'IVC / SVC / Pericardium' }
+            ];
+
+            sectionsMeta.forEach(section => {
+                const summaryDiv = document.getElementById(section.id);
+                let summaryContent = "<em>No findings recorded for this section.</em>"; 
+                if (summaryDiv && summaryDiv.textContent.trim() !== "" && summaryDiv.textContent !== "Select options to see the summary.") {
+                    summaryContent = summaryDiv.textContent.replace(/\.\s+/g, '.<br>'); 
+                }
+                reportHTML += `<h2>${section.title}</h2>`;
+                reportHTML += `<div>${summaryContent}</div>`;
+            });
+
+            printableDiv.innerHTML = reportHTML;
+            printableDiv.style.display = 'block'; // Make it visible for printing
+
+            // 4. Trigger print dialog
+            window.print();
+
+            // 5. Clean up after printing (hide the printable area)
+            setTimeout(() => {
+                printableDiv.style.display = 'none';
+                printableDiv.innerHTML = ''; // Clear its content
+            }, 1000); // Delay to allow print dialog to process
+        }
+    </script>
+</body>
+</html>
