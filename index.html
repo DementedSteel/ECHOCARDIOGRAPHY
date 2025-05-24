@@ -117,12 +117,26 @@
         @media print {
             body { background-color: white !important; }
             body * { visibility: hidden; background-color: white !important; }
-            #printableReport, #printableReport * { visibility: visible; color: black !important; }
-            #printableReport { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; font-size: 11pt; line-height: 1.4; }
-            #printableReport h1 { font-size: 18pt; color: black !important; text-align: center; margin-bottom: 20px; }
-            #printableReport h2 { font-size: 14pt; color: black !important; border-bottom: 1px solid #888; padding-bottom: 5px; margin-top: 20px; margin-bottom: 10px; }
-            #printableReport h3 { font-size: 12pt; color: black !important; margin-top: 10px; margin-bottom: 5px; font-style: italic; }
-            #printableReport p, #printableReport div:not(#printableReport) { color: black !important; margin-bottom: 8px; font-size: 11pt; }
+            
+            #printableReport {
+                display: block !important; /* Ensure #printableReport itself is displayed */
+                visibility: visible !important; /* Ensure visibility */
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 20px; 
+                font-size: 11pt; 
+                line-height: 1.4;
+            }
+            #printableReport * { /* Styles for content WITHIN #printableReport */
+                visibility: visible !important; 
+                color: black !important; 
+            }
+            #printableReport h1 { font-size: 18pt; text-align: center; margin-bottom: 20px; }
+            #printableReport h2 { font-size: 14pt; border-bottom: 1px solid #888; padding-bottom: 5px; margin-top: 20px; margin-bottom: 10px; }
+            #printableReport h3 { font-size: 12pt; margin-top: 10px; margin-bottom: 5px; font-style: italic; }
+            #printableReport p, #printableReport div:not(#printableReport) { margin-bottom: 8px; font-size: 11pt; }
             #printableReport hr { border: none; border-top: 1px solid #ccc; margin: 20px 0; }
             .no-print, .no-print * { display: none !important; }
         }
@@ -940,36 +954,30 @@
             }
         } else {
             console.warn("Firebase config (__firebase_config) is not available. Saving will not work.");
-            // displayModalMessage("Warning: Firebase configuration is missing. Saving will not work.", "Configuration Warning");
-            // ^ Don't show modal for this on initial load, as it might be confusing if user doesn't intend to save.
         }
 
         // --- DOMContentLoaded: Initialize summaries, date, Firebase, and button listeners ---
         document.addEventListener('DOMContentLoaded', async function() {
-            // Initialize all summaries on page load
             updateAllSummaries();
 
-            // Set default date for the report
             const today = new Date().toISOString().split('T')[0];
             const reportDateEl = document.getElementById('report_date');
             if (reportDateEl) {
                 reportDateEl.value = today;
             }
 
-            // Initialize Firebase if config is valid
             if (firebaseConfig) {
                 try {
                     firebaseAppInstance = initializeApp(firebaseConfig);
                     auth = getAuth(firebaseAppInstance);
                     db = getFirestore(firebaseAppInstance);
-                    setLogLevel('debug'); // 'debug' for verbose logging, 'silent' for none
+                    setLogLevel('debug'); 
 
                     onAuthStateChanged(auth, async (user) => {
                         if (user) {
                             userId = user.uid;
                             console.log("User authenticated with UID:", userId);
                         } else {
-                            // No user, try to sign in
                             console.log("User not authenticated. Attempting sign-in...");
                             const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
                             if (initialAuthToken) {
@@ -1003,7 +1011,6 @@
                 }
             } else {
                  console.warn("Firebase is not configured. Report saving will be disabled.");
-                 // Optionally disable the save button or show a persistent message
             }
 
             const pdfButton = document.getElementById('generatePdfButton');
@@ -1011,7 +1018,6 @@
                 pdfButton.addEventListener('click', handleSaveAndPrint);
             }
             
-            // Modal close button listener
             const modalCloseButton = document.getElementById('modalCloseButton');
             if(modalCloseButton) {
                 modalCloseButton.addEventListener('click', () => {
@@ -1021,7 +1027,6 @@
             }
         });
 
-        // --- Helper to get selected text or values from form elements ---
         function getSelectedText(elementId) {
             const element = document.getElementById(elementId);
             if (!element) return "";
@@ -1035,7 +1040,6 @@
             return "";
         }
         
-        // --- Helper to format parts of the summary ---
         function formatPart(label, value) {
             if (value && value.toLowerCase() !== 'none' && value.toLowerCase() !== 'no' && !value.toLowerCase().startsWith("no ") && !value.toLowerCase().includes("normal") && !value.toLowerCase().startsWith("physiological")) {
                 const sentenceEnd = value.endsWith('.') ? value : `${value}.`;
@@ -1046,18 +1050,11 @@
             return "";
         }
 
-        // --- Helper to build the final summary string ---
         function buildSummary(parts) {
             const summary = parts.filter(p => p).join(" ").trim();
             return summary || "Select options to see the summary.";
         }
         
-        // --- Functions to update summaries for each section (updateLeftVentricleSummary, etc.) ---
-        // These functions (updateLeftVentricleSummary, updateRightVentricleSummary, ...)
-        // remain largely the same as in the original file.
-        // Make sure they are all defined here or copied from the original.
-        // For brevity, I'll include one example and a function to call all updates.
-
         function updateLeftVentricleSummary() {
             const summaryDiv = document.getElementById('leftVentricleSummary');
             if (!summaryDiv) return;
@@ -1221,7 +1218,7 @@
             if (!summaryDiv) return;
             let parts = [];
             const ivc = getSelectedText('ivc_assessment');
-            if (ivc) parts.push(ivc.endsWith('.') ? ivc : ivc + '.'); // IVC text is already a full sentence
+            if (ivc) parts.push(ivc.endsWith('.') ? ivc : ivc + '.'); 
             parts.push(formatPart("SVC Findings", getSelectedText('svc_findings')));
             parts.push(formatPart("Pericardial Effusion", getSelectedText('pericardial_effusion')));
             const tamponadeConstriction = getSelectedText('tamponade_constriction');
@@ -1243,26 +1240,24 @@
             updateIvcSvcPeriSummary();
         }
         
-        // --- Function to gather all form data ---
         function getAllFormData() {
             const data = {
                 studentName: document.getElementById('student_name')?.value.trim() || '',
                 studyIdInfo: document.getElementById('study_id_info')?.value.trim() || '',
                 reportDate: document.getElementById('report_date')?.value || '',
-                sections: {} // To store data from each anatomical section
+                sections: {} 
             };
 
-            // Iterate over each main anatomical section (excluding the first student info section)
             const sectionDivs = document.querySelectorAll('.main-anatomical-section');
             sectionDivs.forEach((sectionDiv, index) => {
-                if (index === 0) return; // Skip the first section (Student & Study Information)
+                if (index === 0) return; 
 
-                const sectionId = sectionDiv.id.replace('Section', ''); // e.g., 'leftVentricle' from 'leftVentricleSection'
+                const sectionId = sectionDiv.id.replace('Section', ''); 
                 data.sections[sectionId] = {};
                 
                 const selects = sectionDiv.querySelectorAll('select');
                 selects.forEach(select => {
-                    const selectId = select.id; // e.g., 'lv_size_shape'
+                    const selectId = select.id; 
                     if (select.multiple) {
                         data.sections[sectionId][selectId] = Array.from(select.selectedOptions).map(opt => opt.value);
                     } else {
@@ -1273,14 +1268,13 @@
             return data;
         }
 
-        // --- Function to save report data to Firestore ---
         async function saveReportData(reportData) {
             if (!db || !userId) {
                 console.error("Firestore not initialized or user not authenticated. Cannot save.");
                 displayModalMessage("Error: Cannot save report. Firebase not ready or user not logged in.", "Save Error");
                 return null;
             }
-            if (!firebaseConfig) { // Double check, though covered by button logic too
+            if (!firebaseConfig) { 
                 displayModalMessage("Error: Firebase is not configured. Cannot save report.", "Configuration Error");
                 return null;
             }
@@ -1289,12 +1283,12 @@
                 const reportCollectionPath = `artifacts/${appId}/users/${userId}/echo_reports`;
                 const docRef = await addDoc(collection(db, reportCollectionPath), {
                     ...reportData,
-                    createdAt: serverTimestamp(), // Automatically adds a server-side timestamp
-                    updatedAt: serverTimestamp()  // For consistency, though might be same as createdAt for new docs
+                    createdAt: serverTimestamp(), 
+                    updatedAt: serverTimestamp()  
                 });
                 console.log("Report data saved with ID: ", docRef.id);
                 displayModalMessage("Report saved successfully to your records!", "Report Saved");
-                return docRef.id; // Return the new document ID
+                return docRef.id; 
             } catch (error) {
                 console.error("Error saving report data to Firestore: ", error);
                 displayModalMessage(`Error saving report: ${error.message}. Please try again.`, "Save Error");
@@ -1302,7 +1296,6 @@
             }
         }
         
-        // --- Function to display modal messages ---
         function displayModalMessage(message, title = "Notification") {
             const modal = document.getElementById('messageModal');
             const modalTitleEl = document.getElementById('modalTitle');
@@ -1313,13 +1306,10 @@
                 modalMessageEl.textContent = message;
                 modal.style.display = 'flex';
             } else {
-                // Fallback if modal elements are somehow not found (should not happen)
                 console.warn("Modal elements not found. Message:", title, "-", message);
-                // Avoid using alert() as per instructions. console.log is a silent fallback.
             }
         }
 
-        // --- Main function to handle saving data and then printing ---
         async function handleSaveAndPrint() {
             const printableDiv = document.getElementById('printableReport');
             if (!printableDiv) {
@@ -1327,15 +1317,11 @@
                 return;
             }
 
-            // 1. Gather all form data
             const formDataToSave = getAllFormData();
 
-            // 2. Save data to Firestore (if Firebase is configured)
-            if (firebaseConfig && db && userId) { // Check if Firebase is ready
+            if (firebaseConfig && db && userId) { 
                 const savedReportId = await saveReportData(formDataToSave);
                 if (!savedReportId) {
-                    // Optional: Decide if PDF generation should proceed if saving fails.
-                    // For now, we'll let it proceed but the user got an error message.
                     console.warn("Report saving failed, but proceeding with PDF generation.");
                 }
             } else {
@@ -1343,12 +1329,11 @@
                 displayModalMessage("Warning: Report will be generated for print/PDF, but not saved to database due to configuration/login issue.", "Save Skipped");
             }
             
-            // 3. Generate HTML content for the PDF/print
             let reportHTML = `<h1>Echocardiography Findings Report</h1>`;
             const studentName = formDataToSave.studentName || 'N/A';
             const studyIdInfo = formDataToSave.studyIdInfo || 'N/A';
             const reportDateInput = formDataToSave.reportDate;
-            const reportDate = reportDateInput ? new Date(reportDateInput + 'T00:00:00Z').toLocaleDateString() : new Date().toLocaleDateString(); // Ensure UTC interpretation if only date
+            const reportDate = reportDateInput ? new Date(reportDateInput + 'T00:00:00Z').toLocaleDateString() : new Date().toLocaleDateString(); 
 
             reportHTML += `
                 <div style="margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
@@ -1358,7 +1343,7 @@
                 </div>
             `;
             
-            const sectionsMeta = [ // Use the IDs of the summary divs
+            const sectionsMeta = [ 
                 { id: 'leftVentricleSummary', title: 'Left Ventricle' },
                 { id: 'rightVentricleSummary', title: 'Right Ventricle' },
                 { id: 'leftAtriumSummary', title: 'Left Atrium' },
@@ -1382,16 +1367,17 @@
             });
 
             printableDiv.innerHTML = reportHTML;
-            printableDiv.style.display = 'block'; // Make it visible for printing
+            printableDiv.style.display = 'block'; 
 
-            // 4. Trigger print dialog
-            window.print();
-
-            // 5. Clean up after printing (hide the printable area)
-            setTimeout(() => {
+            function cleanUpAfterPrint() {
                 printableDiv.style.display = 'none';
-                printableDiv.innerHTML = ''; // Clear its content
-            }, 1000); // Delay to allow print dialog to process
+                printableDiv.innerHTML = ''; 
+                window.removeEventListener('afterprint', cleanUpAfterPrint); // Remove the listener itself
+                console.log("Cleaned up after print.");
+            }
+            window.addEventListener('afterprint', cleanUpAfterPrint);
+            
+            window.print();
         }
     </script>
 </body>
