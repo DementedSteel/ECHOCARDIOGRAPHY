@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Echo Findings Report - PDF Export & Save</title>
+    <title>Modern Echo Findings Report - PDF Export</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -56,28 +56,29 @@
             color: #e1e1e1; /* Light text in inputs */
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
+        /* Style for date input placeholder text color */
         input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(0.8); 
+            filter: invert(0.8); /* Invert icon color for dark theme */
         }
         select:focus, input[type="text"]:focus, input[type="date"]:focus, textarea:focus {
-            border-color: #4d88ff; 
-            box-shadow: 0 0 0 3px rgba(77, 136, 255, 0.3); 
+            border-color: #4d88ff; /* Royal Navy Blue for focus */
+            box-shadow: 0 0 0 3px rgba(77, 136, 255, 0.3); /* Royal Navy Blue shadow */
             outline: none;
         }
         .summary-box {
-            background-color: #222b38; 
-            border: 1px solid #4d88ff; 
+            background-color: #222b38; /* Dark desaturated navy */
+            border: 1px solid #4d88ff; /* Royal Navy Blue border for summary */
             padding: 15px;
             border-radius: 8px;
             margin-top: 8px;
             min-height: 80px;
             white-space: pre-wrap;
             font-size: 0.9rem;
-            color: #c0c8d4; 
+            color: #c0c8d4; /* Light grey-blue text */
             flex-grow: 1;
         }
         .main-header {
-            background-color: #003366; 
+            background-color: #003366; /* Classic Dark Royal Navy Blue */
             color: white;
             padding: 1rem 1.5rem;
             border-radius: 8px;
@@ -107,54 +108,79 @@
         }
         select optgroup {
             font-weight: bold;
-            background-color: #3a3a3c; 
-            color: #6fa4ff; 
+            background-color: #3a3a3c; /* Match select background */
+            color: #6fa4ff; /* Lighter Royal Navy Blue for optgroup titles */
         }
         select option {
             background-color: #3a3a3c;
             color: #e1e1e1;
         }
 
-        /* Print CSS might still be useful for the structure if html2pdf needs specific rendering hints,
-           or if a direct print (Ctrl+P) is attempted by the user, though we're overriding the button. */
+        /* Styles for the printable report (will be shown temporarily) - Can be removed or kept if window.print is a fallback */
+        /*
         @media print {
-            body { background-color: white !important; }
-            body * { visibility: hidden; background-color: white !important; }
-            
+            body {
+                 background-color: white !important;
+            }
+            body * {
+                visibility: hidden;
+                background-color: white !important;
+            }
+            #printableReport, #printableReport * {
+                visibility: visible;
+                color: black !important;
+            }
             #printableReport {
-                display: block !important; 
-                visibility: visible !important; 
-                position: absolute; /* Or relative if html2pdf handles it better */
+                position: absolute;
                 left: 0;
                 top: 0;
-                width: 100%; /* Ensure it takes width for html2pdf capture */
-                padding: 20px; 
-                font-size: 11pt; 
+                width: 100%;
+                padding: 20px;
+                font-size: 11pt;
                 line-height: 1.4;
-                background-color: white !important; /* Ensure background for PDF */
             }
-            #printableReport * { 
-                visibility: visible !important; 
-                color: black !important; 
-                background-color: transparent !important; /* Avoid capturing dark backgrounds from theme */
+            #printableReport h1 {
+                font-size: 18pt;
+                color: black !important;
+                text-align: center;
+                margin-bottom: 20px;
             }
-            #printableReport h1 { font-size: 18pt; text-align: center; margin-bottom: 20px; }
-            #printableReport h2 { font-size: 14pt; border-bottom: 1px solid #888; padding-bottom: 5px; margin-top: 20px; margin-bottom: 10px; }
-            #printableReport h3 { font-size: 12pt; margin-top: 10px; margin-bottom: 5px; font-style: italic; }
-            #printableReport p, #printableReport div:not(#printableReport) { margin-bottom: 8px; font-size: 11pt; }
-            #printableReport hr { border: none; border-top: 1px solid #ccc; margin: 20px 0; }
-            .no-print, .no-print * { display: none !important; }
+            #printableReport h2 {
+                font-size: 14pt;
+                color: black !important;
+                border-bottom: 1px solid #888;
+                padding-bottom: 5px;
+                margin-top: 20px;
+                margin-bottom: 10px;
+            }
+            #printableReport h3 {
+                font-size: 12pt;
+                color: black !important;
+                margin-top: 10px;
+                margin-bottom: 5px;
+                 font-style: italic;
+            }
+            #printableReport p, #printableReport div:not(#printableReport) {
+                color: black !important;
+                margin-bottom: 8px;
+                font-size: 11pt;
+            }
+             #printableReport hr {
+                border: none;
+                border-top: 1px solid #ccc;
+                margin: 20px 0;
+            }
+            .no-print, .no-print * {
+                display: none !important;
+            }
         }
+        */
         .download-button-container {
-            background-color: #2c2c2e; 
+            background-color: #2c2c2e; /* Match section background */
             padding: 20px;
             border-radius: 8px;
-            margin-top: 1.5rem; 
+            margin-top: 1.5rem; /* Equivalent to gap-6 */
             border: 1px solid #444448;
-        }
-        /* Modal Styles */
-        #messageModal {
-            z-index: 1000; /* Ensure modal is on top */
         }
     </style>
 </head>
@@ -180,9 +206,9 @@
                 </div>
             </div>
         </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-6 no-print">
-            <div id="leftVentricleSection" class="main-anatomical-section">
+
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-6 no-print"> <div id="leftVentricleSection" class="main-anatomical-section">
                 <h3 class="details-header">Left Ventricle</h3>
                 <div class="input-grid">
                     <div>
@@ -476,7 +502,7 @@
                 <h3 class="summary-header">Left Atrium Summary</h3>
                 <div id="leftAtriumSummary" class="summary-box">Select options to see the summary.</div>
             </div>
-            
+
             <div id="rightAtriumSection" class="main-anatomical-section">
                 <h3 class="details-header">Right Atrium</h3>
                 <div class="input-grid">
@@ -916,101 +942,42 @@
             </div>
         </div>
 
-        <div class="download-button-container text-center no-print"> 
-            <button id="generatePdfButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-150 ease-in-out">
-                Save Report & Generate PDF
+        <div class="download-button-container text-center no-print"> <button id="generatePdfButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-150 ease-in-out">
+                Generate & Download PDF
             </button>
         </div>
 
-        <div id="printableReport" style="display: none; background-color: white;"></div>
-
-        <div id="messageModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center no-print" style="display: none;">
-            <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md mx-auto">
-                <h3 id="modalTitle" class="text-lg font-semibold text-blue-400 mb-4">Notification</h3>
-                <p id="modalMessage" class="text-gray-300 mb-6"></p>
-                <button id="modalCloseButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded w-full">
-                    OK
-                </button>
+        <div id="printableReport" style="display: none;">
             </div>
-        </div>
 
     </div>
 
-    <script type="module">
-        // Firebase SDK imports
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize all summaries on page load
+            updateLeftVentricleSummary();
+            updateRightVentricleSummary();
+            updateLeftAtriumSummary();
+            updateRightAtriumSummary();
+            updateMitralValveSummary();
+            updateAorticValveSummary();
+            updateTricuspidValveSummary();
+            updatePulmonicValveSummary();
+            updateAortaSummary();
+            updateIvcSvcPeriSummary();
 
-        // Firebase instance variables
-        let db, auth, userId, firebaseAppInstance; 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'echo-report-app-default'; 
-        const firebaseConfigString = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-        let firebaseConfig = null;
-
-        if (firebaseConfigString) {
-            try {
-                firebaseConfig = JSON.parse(firebaseConfigString);
-            } catch (e) {
-                console.error("Error parsing Firebase config:", e);
-                displayModalMessage("Error: Firebase configuration is invalid. Saving will not work.", "Configuration Error");
-            }
-        } else {
-            console.warn("Firebase config (__firebase_config) is not available. Saving will not work.");
-        }
-
-        document.addEventListener('DOMContentLoaded', async function() {
-            updateAllSummaries();
+            // Set default date for the report
             const today = new Date().toISOString().split('T')[0];
             const reportDateEl = document.getElementById('report_date');
-            if (reportDateEl) reportDateEl.value = today;
-
-            if (firebaseConfig) {
-                try {
-                    firebaseAppInstance = initializeApp(firebaseConfig);
-                    auth = getAuth(firebaseAppInstance);
-                    db = getFirestore(firebaseAppInstance);
-                    setLogLevel('debug'); 
-                    onAuthStateChanged(auth, async (user) => {
-                        if (user) {
-                            userId = user.uid;
-                            console.log("User authenticated with UID:", userId);
-                        } else {
-                            console.log("User not authenticated. Attempting sign-in...");
-                            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                            try {
-                                if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
-                                else await signInAnonymously(auth);
-                                console.log(initialAuthToken ? "Signed in with custom token." : "Signed in anonymously.");
-                            } catch (error) {
-                                console.error("Sign-in error:", error);
-                                if (initialAuthToken) { // If custom token failed, try anonymous as fallback
-                                    try { 
-                                        await signInAnonymously(auth); 
-                                        console.log("Signed in anonymously after custom token failure.");
-                                    } catch (anonError) {displayModalMessage("Authentication failed. Saving reports may not work.", "Auth Error");}
-                                } else {
-                                    displayModalMessage("Authentication failed. Saving reports may not work.", "Auth Error");
-                                }
-                            }
-                        }
-                    });
-                } catch (error) {
-                    console.error("Firebase initialization error:", error);
-                    displayModalMessage("Error initializing Firebase. Saving reports may not work.", "Firebase Error");
-                }
-            } else {
-                 console.warn("Firebase is not configured. Report saving will be disabled.");
+            if (reportDateEl) {
+                reportDateEl.value = today;
             }
 
             const pdfButton = document.getElementById('generatePdfButton');
-            if (pdfButton) pdfButton.addEventListener('click', handleSaveAndGeneratePdf); // Changed function name
-            
-            const modalCloseButton = document.getElementById('modalCloseButton');
-            if(modalCloseButton) modalCloseButton.addEventListener('click', () => {
-                const modal = document.getElementById('messageModal');
-                if(modal) modal.style.display = 'none';
-            });
+            if (pdfButton) {
+                // pdfButton.addEventListener('click', generatePdfContentAndPrint); // Old method
+                pdfButton.addEventListener('click', generateAndDownloadPdf); // New method using jsPDF
+            }
         });
 
         function getSelectedText(elementId) {
@@ -1025,12 +992,12 @@
             }
             return "";
         }
-        
+
         function formatPart(label, value) {
             if (value && value.toLowerCase() !== 'none' && value.toLowerCase() !== 'no' && !value.toLowerCase().startsWith("no ") && !value.toLowerCase().includes("normal") && !value.toLowerCase().startsWith("physiological")) {
                 const sentenceEnd = value.endsWith('.') ? value : `${value}.`;
                 return `${label}: ${sentenceEnd}`;
-            } else if (value) { 
+            } else if (value) {
                 return value.endsWith('.') ? value : `${value}.`;
             }
             return "";
@@ -1040,7 +1007,7 @@
             const summary = parts.filter(p => p).join(" ").trim();
             return summary || "Select options to see the summary.";
         }
-        
+
         function updateLeftVentricleSummary() {
             const summaryDiv = document.getElementById('leftVentricleSummary');
             if (!summaryDiv) return;
@@ -1051,7 +1018,7 @@
             const efMethod = getSelectedText('lv_ef_method');
             if (ef) {
                 let efPart = `Global LV systolic function is ${ef.toLowerCase()}`;
-                if (efMethod && !ef.toLowerCase().includes("unable to assess ef")) efPart += ` by ${efMethod.toLowerCase()} method`;
+                if (efMethod && !ef.toLowerCase().includes("unable to assess")) efPart += ` by ${efMethod.toLowerCase()} method`;
                 parts.push(efPart.endsWith('.') ? efPart : efPart + ".");
             }
             const rwma = getSelectedText('lv_rwma');
@@ -1076,6 +1043,7 @@
             if (otherLV) parts.push(`Other LV findings: ${otherLV}.`);
             summaryDiv.textContent = buildSummary(parts);
         }
+
         function updateRightVentricleSummary() {
             const summaryDiv = document.getElementById('rightVentricleSummary');
             if (!summaryDiv) return;
@@ -1095,6 +1063,7 @@
             if (otherRV) parts.push(`Other RV findings: ${otherRV}.`);
             summaryDiv.textContent = buildSummary(parts);
         }
+
         function updateLeftAtriumSummary() {
             const summaryDiv = document.getElementById('leftAtriumSummary');
             if (!summaryDiv) return;
@@ -1107,6 +1076,7 @@
             parts.push(formatPart("Other LA Findings", getSelectedText('la_other')));
             summaryDiv.textContent = buildSummary(parts);
         }
+
         function updateRightAtriumSummary() {
             const summaryDiv = document.getElementById('rightAtriumSummary');
             if (!summaryDiv) return;
@@ -1117,6 +1087,7 @@
             if (otherRA) parts.push(`Other RA findings: ${otherRA}.`);
             summaryDiv.textContent = buildSummary(parts);
         }
+
         function updateMitralValveSummary() {
             const summaryDiv = document.getElementById('mitralValveSummary');
             if (!summaryDiv) return;
@@ -1135,6 +1106,7 @@
             }
             summaryDiv.textContent = buildSummary(parts);
         }
+
         function updateAorticValveSummary() {
             const summaryDiv = document.getElementById('aorticValveSummary');
             if (!summaryDiv) return;
@@ -1153,6 +1125,7 @@
             }
             summaryDiv.textContent = buildSummary(parts);
         }
+
         function updateTricuspidValveSummary() {
             const summaryDiv = document.getElementById('tricuspidValveSummary');
             if (!summaryDiv) return;
@@ -1171,6 +1144,7 @@
             }
             summaryDiv.textContent = buildSummary(parts);
         }
+
         function updatePulmonicValveSummary() {
             const summaryDiv = document.getElementById('pulmonicValveSummary');
             if (!summaryDiv) return;
@@ -1186,6 +1160,7 @@
             }
             summaryDiv.textContent = buildSummary(parts);
         }
+
         function updateAortaSummary() {
             const summaryDiv = document.getElementById('aortaSummary');
             if (!summaryDiv) return;
@@ -1199,12 +1174,13 @@
             if (otherAortic) parts.push(`Other Aortic Findings: ${otherAortic}.`);
             summaryDiv.textContent = buildSummary(parts);
         }
+
         function updateIvcSvcPeriSummary() {
             const summaryDiv = document.getElementById('ivcSvcPeriSummary');
             if (!summaryDiv) return;
             let parts = [];
             const ivc = getSelectedText('ivc_assessment');
-            if (ivc) parts.push(ivc.endsWith('.') ? ivc : ivc + '.'); 
+            if (ivc) parts.push(ivc.endsWith('.') ? ivc : ivc + '.');
             parts.push(formatPart("SVC Findings", getSelectedText('svc_findings')));
             parts.push(formatPart("Pericardial Effusion", getSelectedText('pericardial_effusion')));
             const tamponadeConstriction = getSelectedText('tamponade_constriction');
@@ -1213,115 +1189,50 @@
             summaryDiv.textContent = buildSummary(parts);
         }
 
-        function updateAllSummaries() {
-            updateLeftVentricleSummary();
-            updateRightVentricleSummary();
-            updateLeftAtriumSummary();
-            updateRightAtriumSummary();
-            updateMitralValveSummary();
-            updateAorticValveSummary();
-            updateTricuspidValveSummary();
-            updatePulmonicValveSummary();
-            updateAortaSummary();
-            updateIvcSvcPeriSummary();
-        }
-        
-        function getAllFormData() {
-            const data = {
-                studentName: document.getElementById('student_name')?.value.trim() || '',
-                studyIdInfo: document.getElementById('study_id_info')?.value.trim() || '',
-                reportDate: document.getElementById('report_date')?.value || '',
-                sections: {} 
-            };
-            const sectionDivs = document.querySelectorAll('.main-anatomical-section');
-            sectionDivs.forEach((sectionDiv, index) => {
-                if (index === 0) return; 
-                const sectionId = sectionDiv.id.replace('Section', ''); 
-                data.sections[sectionId] = {};
-                const selects = sectionDiv.querySelectorAll('select');
-                selects.forEach(select => {
-                    const selectId = select.id; 
-                    if (select.multiple) {
-                        data.sections[sectionId][selectId] = Array.from(select.selectedOptions).map(opt => opt.value);
-                    } else {
-                        data.sections[sectionId][selectId] = select.value;
-                    }
-                });
+        // --- NEW JAVASCRIPT for PDF Generation using jsPDF ---
+        async function generateAndDownloadPdf() {
+            const { jsPDF } = window.jspdf;
+            const pdfDoc = new jsPDF({
+                orientation: 'p', // portrait
+                unit: 'mm', // units
+                format: 'a4' // page format
             });
-            return data;
-        }
 
-        async function saveReportData(reportData) {
-            if (!db || !userId) {
-                console.error("Firestore not initialized or user not authenticated. Cannot save.");
-                displayModalMessage("Error: Cannot save report. Firebase not ready or user not logged in.", "Save Error");
-                return null;
-            }
-            if (!firebaseConfig) { 
-                displayModalMessage("Error: Firebase is not configured. Cannot save report.", "Configuration Error");
-                return null;
-            }
-            try {
-                const reportCollectionPath = `artifacts/${appId}/users/${userId}/echo_reports`;
-                const docRef = await addDoc(collection(db, reportCollectionPath), {
-                    ...reportData,
-                    createdAt: serverTimestamp(), 
-                    updatedAt: serverTimestamp()  
-                });
-                console.log("Report data saved with ID: ", docRef.id);
-                displayModalMessage("Report saved successfully to your records!", "Report Saved");
-                return docRef.id; 
-            } catch (error) {
-                console.error("Error saving report data to Firestore: ", error);
-                displayModalMessage(`Error saving report: ${error.message}. Please try again.`, "Save Error");
-                return null;
-            }
-        }
-        
-        function displayModalMessage(message, title = "Notification") {
-            const modal = document.getElementById('messageModal');
-            const modalTitleEl = document.getElementById('modalTitle');
-            const modalMessageEl = document.getElementById('modalMessage');
-            if (modal && modalTitleEl && modalMessageEl) {
-                modalTitleEl.textContent = title;
-                modalMessageEl.textContent = message;
-                modal.style.display = 'flex';
-            } else {
-                console.warn("Modal elements not found. Message:", title, "-", message);
-            }
-        }
+            // --- Gather Report Data ---
+            const studentName = document.getElementById('student_name')?.value.trim() || 'N/A';
+            const studyIdInfo = document.getElementById('study_id_info')?.value.trim() || 'N/A';
+            const reportDateInput = document.getElementById('report_date')?.value;
+            const reportDate = reportDateInput ? new Date(reportDateInput + 'T00:00:00').toLocaleDateString() : new Date().toLocaleDateString();
 
-        async function handleSaveAndGeneratePdf() { // Renamed from handleSaveAndPrint
-            const printableElement = document.getElementById('printableReport'); // Use 'printableElement' for clarity
-            if (!printableElement) {
-                console.error("Printable report area not found.");
-                return;
-            }
+            let yPosition = 15; // Starting Y position for content (in mm)
+            const leftMargin = 15;
+            const rightMargin = 15;
+            const usableWidth = pdfDoc.internal.pageSize.getWidth() - leftMargin - rightMargin;
+            const lineSpacing = 7; // mm between lines of text
+            const sectionTitleSpacing = 10;
+            const paragraphSpacing = 5;
 
-            const formDataToSave = getAllFormData();
 
-            if (firebaseConfig && db && userId) { 
-                const savedReportId = await saveReportData(formDataToSave);
-                // Continue with PDF generation even if saving fails, user has been notified.
-            } else {
-                console.warn("Firebase not configured or user not authenticated. Skipping save, proceeding with PDF generation only.");
-                displayModalMessage("Warning: Report will be generated as PDF, but not saved to database due to configuration/login issue.", "Save Skipped");
-            }
-            
-            let reportHTML = `<h1>Echocardiography Findings Report</h1>`;
-            const studentName = formDataToSave.studentName || 'N/A';
-            const studyIdInfo = formDataToSave.studyIdInfo || 'N/A';
-            const reportDateInput = formDataToSave.reportDate;
-            const reportDate = reportDateInput ? new Date(reportDateInput + 'T00:00:00Z').toLocaleDateString() : new Date().toLocaleDateString(); 
+            // --- Add Main Title ---
+            pdfDoc.setFontSize(18);
+            pdfDoc.text("Echocardiography Findings Report", pdfDoc.internal.pageSize.getWidth() / 2, yPosition, { align: 'center' });
+            yPosition += sectionTitleSpacing;
 
-            reportHTML += `
-                <div style="margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
-                    <p><strong>Student:</strong> ${studentName}</p>
-                    <p><strong>Study ID/Name:</strong> ${studyIdInfo}</p>
-                    <p><strong>Date:</strong> ${reportDate}</p>
-                </div>
-            `;
-            const sectionsMeta = [ 
+            // --- Add Student and Study Info ---
+            pdfDoc.setFontSize(11);
+            pdfDoc.text(`Student: ${studentName}`, leftMargin, yPosition);
+            yPosition += lineSpacing;
+            pdfDoc.text(`Study ID/Name: ${studyIdInfo}`, leftMargin, yPosition);
+            yPosition += lineSpacing;
+            pdfDoc.text(`Date: ${reportDate}`, leftMargin, yPosition);
+            yPosition += lineSpacing;
+            pdfDoc.setLineWidth(0.5);
+            pdfDoc.line(leftMargin, yPosition, pdfDoc.internal.pageSize.getWidth() - rightMargin, yPosition); // Horizontal line
+            yPosition += sectionTitleSpacing;
+
+
+            // --- Add Section Summaries ---
+            const sections = [
                 { id: 'leftVentricleSummary', title: 'Left Ventricle' },
                 { id: 'rightVentricleSummary', title: 'Right Ventricle' },
                 { id: 'leftAtriumSummary', title: 'Left Atrium' },
@@ -1333,45 +1244,111 @@
                 { id: 'aortaSummary', title: 'Aorta' },
                 { id: 'ivcSvcPeriSummary', title: 'IVC / SVC / Pericardium' }
             ];
-            sectionsMeta.forEach(section => {
+
+            const pageHeight = pdfDoc.internal.pageSize.getHeight();
+            const bottomMargin = 20; // Keep some margin at the bottom
+
+            sections.forEach(section => {
                 const summaryDiv = document.getElementById(section.id);
-                let summaryContent = "<em>No findings recorded for this section.</em>"; 
-                if (summaryDiv && summaryDiv.textContent.trim() !== "" && summaryDiv.textContent !== "Select options to see the summary.") {
-                    summaryContent = summaryDiv.textContent.replace(/\.\s+/g, '.<br>'); 
+                let summaryContent = "No findings recorded for this section.";
+                if (summaryDiv && summaryDiv.textContent !== "Select options to see the summary." && summaryDiv.textContent.trim() !== "") {
+                    summaryContent = summaryDiv.textContent.trim();
+                }
+
+                // Check for page break before adding new section title
+                if (yPosition + sectionTitleSpacing > pageHeight - bottomMargin) {
+                    pdfDoc.addPage();
+                    yPosition = 15; // Reset Y position for new page
+                }
+
+                pdfDoc.setFontSize(14);
+                pdfDoc.setFont(undefined, 'bold');
+                pdfDoc.text(section.title, leftMargin, yPosition);
+                yPosition += lineSpacing;
+                pdfDoc.setFont(undefined, 'normal');
+                pdfDoc.setFontSize(10);
+
+                const splitText = pdfDoc.splitTextToSize(summaryContent, usableWidth);
+
+                splitText.forEach(line => {
+                    if (yPosition > pageHeight - bottomMargin) {
+                        pdfDoc.addPage();
+                        yPosition = 15; // Reset Y position for new page
+                         // Re-add section title if content spans multiple pages
+                        pdfDoc.setFontSize(14);
+                        pdfDoc.setFont(undefined, 'bold');
+                        pdfDoc.text(`${section.title} (continued)`, leftMargin, yPosition);
+                        yPosition += lineSpacing;
+                        pdfDoc.setFont(undefined, 'normal');
+                        pdfDoc.setFontSize(10);
+                    }
+                    pdfDoc.text(line, leftMargin, yPosition);
+                    yPosition += (lineSpacing * 0.7); // Smaller spacing for lines within a paragraph
+                });
+                yPosition += paragraphSpacing; // Add a bit more space after a section's content
+            });
+
+            // --- Trigger Download ---
+            const fileName = `EchoReport_${studentName.replace(/\s+/g, '_') || 'Study'}_${reportDate.replace(/\//g, '-')}.pdf`;
+            pdfDoc.save(fileName);
+        }
+
+        /*
+        // OLD FUNCTION - Kept for reference or if you want a fallback, but not used by the button anymore
+        function generatePdfContentAndPrint() {
+            const printableDiv = document.getElementById('printableReport');
+            if (!printableDiv) return;
+
+            let reportHTML = `<h1>Echocardiography Findings Report</h1>`;
+
+            const studentName = document.getElementById('student_name')?.value.trim() || 'N/A';
+            const studyIdInfo = document.getElementById('study_id_info')?.value.trim() || 'N/A';
+            const reportDateInput = document.getElementById('report_date')?.value;
+            const reportDate = reportDateInput ? new Date(reportDateInput + 'T00:00:00').toLocaleDateString() : new Date().toLocaleDateString();
+
+            reportHTML += `
+                <div style="margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+                    <p><strong>Student:</strong> ${studentName}</p>
+                    <p><strong>Study ID/Name:</strong> ${studyIdInfo}</p>
+                    <p><strong>Date:</strong> ${reportDate}</p>
+                </div>
+            `;
+
+            const sections = [
+                { id: 'leftVentricleSummary', title: 'Left Ventricle' },
+                { id: 'rightVentricleSummary', title: 'Right Ventricle' },
+                { id: 'leftAtriumSummary', title: 'Left Atrium' },
+                { id: 'rightAtriumSummary', title: 'Right Atrium' },
+                { id: 'mitralValveSummary', title: 'Mitral Valve' },
+                { id: 'aorticValveSummary', title: 'Aortic Valve' },
+                { id: 'tricuspidValveSummary', title: 'Tricuspid Valve' },
+                { id: 'pulmonicValveSummary', title: 'Pulmonic Valve' },
+                { id: 'aortaSummary', title: 'Aorta' },
+                { id: 'ivcSvcPeriSummary', title: 'IVC / SVC / Pericardium' }
+            ];
+
+            sections.forEach(section => {
+                const summaryDiv = document.getElementById(section.id);
+                let summaryContent = "<em>No findings recorded for this section.</em>";
+                if (summaryDiv && summaryDiv.textContent !== "Select options to see the summary." && summaryDiv.textContent.trim() !== "") {
+                    summaryContent = summaryDiv.textContent.replace(/\.\s+/g, '.<br>');
                 }
                 reportHTML += `<h2>${section.title}</h2>`;
                 reportHTML += `<div>${summaryContent}</div>`;
             });
 
-            printableElement.innerHTML = reportHTML;
-            printableElement.style.display = 'block'; 
-            // Ensure printableElement has a white background for PDF generation if body is dark
-            printableElement.style.backgroundColor = 'white'; 
+            printableDiv.innerHTML = reportHTML;
+            printableDiv.style.display = 'block';
 
-            const pdfOptions = {
-                margin: 10, // mm
-                filename: 'echo-report.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: true, backgroundColor: '#ffffff' }, // Added backgroundColor here too
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
+            window.print();
 
-            html2pdf().from(printableElement).set(pdfOptions).save()
-                .then(() => {
-                    console.log("PDF generated and download initiated.");
-                    printableElement.style.display = 'none'; 
-                    printableElement.innerHTML = ''; 
-                    printableElement.style.backgroundColor = ''; // Reset background
-                })
-                .catch(err => {
-                    console.error("Error generating PDF with html2pdf:", err);
-                    displayModalMessage("Error generating PDF. Please try again.", "PDF Error");
-                    // Still hide the element even if PDF generation fails
-                    printableElement.style.display = 'none'; 
-                    printableElement.innerHTML = '';
-                    printableElement.style.backgroundColor = ''; 
-                });
+            setTimeout(() => {
+                printableDiv.style.display = 'none';
+                printableDiv.innerHTML = '';
+            }, 1000);
         }
+        */
+
     </script>
 </body>
 </html>
